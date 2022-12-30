@@ -1,0 +1,13 @@
+ext {
+    roomVersion = "2.4.3"
+    hiltVersion = "2.44"
+    viewBindingDelegateVersion = "1.5.6"
+    lifecycleVersion = "2.5.1"
+    ciceroneVersion = "7.1"
+    viewBindingVersion = "7.3.1"
+    fragmentVersion = "1.5.4"
+    glideVersion = "4.11.0"
+    fabVersion = "3.3.0"
+    zoomyVersion = "1.0.0"
+    dateTimePickerVersion = "1.01"
+}

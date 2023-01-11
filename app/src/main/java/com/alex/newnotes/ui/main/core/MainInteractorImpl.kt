@@ -33,6 +33,7 @@ class MainInteractorImpl @Inject constructor(
     override suspend fun markCompleted(note: Note) {
         note.completed = true
         note.completionDate = SimpleDateFormat("dd-MM-yyyy", Locale.ROOT).format(Date())
+        note.warning = false
         repository.update(note)
     }
 

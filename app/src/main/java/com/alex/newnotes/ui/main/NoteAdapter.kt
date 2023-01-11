@@ -8,13 +8,13 @@ import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.alex.newnotes.R
 import com.alex.newnotes.data.database.Note
-import com.alex.newnotes.databinding.RcItemBinding
-import java.util.Collections
+import com.alex.newnotes.databinding.NoteItemBinding
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class NoteAdapter(private val onItemClick: ItemClickListener) : Adapter<NoteAdapter.NoteHolder>() {
     val differ = AsyncListDiffer(this, NoteDiffUtilCallback())
@@ -33,7 +33,7 @@ class NoteAdapter(private val onItemClick: ItemClickListener) : Adapter<NoteAdap
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteHolder {
         return NoteHolder(
-            RcItemBinding.inflate(
+            NoteItemBinding.inflate(
                 LayoutInflater.from(parent.context),
                 parent,
                 false
@@ -59,7 +59,7 @@ class NoteAdapter(private val onItemClick: ItemClickListener) : Adapter<NoteAdap
         }
     }
 
-    inner class NoteHolder(private val binding: RcItemBinding) : ViewHolder(binding.root) {
+    inner class NoteHolder(private val binding: NoteItemBinding) : ViewHolder(binding.root) {
         init {
             binding.root.setOnClickListener {
                 differ.currentList[absoluteAdapterPosition]?.let { onItemClick.onItemClick(it) }
@@ -71,6 +71,22 @@ class NoteAdapter(private val onItemClick: ItemClickListener) : Adapter<NoteAdap
                 tvItemTitle.text = note.title
                 itemCard.setCardBackgroundColor(Color.parseColor(note.color))
                 if (note.uri != null) itemImage.visibility = View.VISIBLE
+                if (note.completeBy?.isNotEmpty() == true) {
+                    val completeBy = LocalDateTime.parse(
+                        note.completeBy,
+                        DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
+                    )
+                    if (LocalDateTime.now().isAfter(completeBy)) note.warning = true
+                }
+                if (note.completed) {
+                    note.warning = false
+                }
+                if (note.warning) {
+                    imWarning.visibility = View.VISIBLE
+                    val warningAnim =
+                        AnimationUtils.loadAnimation(imWarning.context, R.anim.warning_anim)
+                    imWarning.startAnimation(warningAnim)
+                } else imWarning.visibility = View.GONE
                 if (note.completed) {
                     imDone.visibility = View.VISIBLE
                     tvItemTitle.paintFlags =

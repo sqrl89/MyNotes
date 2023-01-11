@@ -11,10 +11,10 @@ import com.alex.newnotes.ui.edit.EditFragment.Companion.KEY_FOR_SOURCE
 import com.alex.newnotes.ui.edit.EditFragment.Companion.REQUEST_KEY
 import com.alex.newnotes.ui.edit.EditFragment.Companion.SAVE_KEY
 
-class CloseDialogFragment: DialogFragment() {
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val builder = AlertDialog.Builder(requireContext())
-        return builder.setTitle(resources.getString(R.string.save_changes))
+class CloseDialogFragment : DialogFragment() {
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
+        AlertDialog.Builder(requireContext())
+            .setTitle(resources.getString(R.string.save_changes))
             .setCancelable(true)
             .setPositiveButton(resources.getString(R.string.yes)) { dialog, _ ->
                 parentFragmentManager.setFragmentResult(
@@ -31,5 +31,4 @@ class CloseDialogFragment: DialogFragment() {
                 dialog.cancel()
             }
             .create()
-    }
 }

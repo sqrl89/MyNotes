@@ -28,14 +28,25 @@
             android:layout_height="match_parent">
 
             <ImageView
+                android:id="@+id/imWarning"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/warning"
+                android:src="@drawable/ic_warning"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
                 android:id="@+id/imDone"
                 android:layout_width="36dp"
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/image_done"
-                android:src="@drawable/done_check"
+                android:src="@drawable/ic_done_check"
                 android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintStart_toEndOf="@id/imWarning"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView

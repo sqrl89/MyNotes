@@ -13,11 +13,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.ItemTouchHelper.DOWN
 import androidx.recyclerview.widget.ItemTouchHelper.LEFT
 import androidx.recyclerview.widget.ItemTouchHelper.RIGHT
 import androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback
-import androidx.recyclerview.widget.ItemTouchHelper.UP
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import by.kirich1409.viewbindingdelegate.viewBinding
@@ -37,7 +35,6 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-
 
 @AndroidEntryPoint
 class MainFragment : Fragment(R.layout.fragment_main), ItemClickListener {
@@ -70,8 +67,8 @@ class MainFragment : Fragment(R.layout.fragment_main), ItemClickListener {
                     fbNew.hide()
                 } else fbNew.show()
             }
-            onQueryChange()
             swipeItem().attachToRecyclerView(rcView)
+            onQueryChange()
         }
     }
 
@@ -108,9 +105,11 @@ class MainFragment : Fragment(R.layout.fragment_main), ItemClickListener {
 
     private fun swipeItem(): ItemTouchHelper {
         return ItemTouchHelper(object :
-            SimpleCallback( 0,
+            SimpleCallback(
+                0,
 //                UP or DOWN,
-                RIGHT or LEFT) {
+                RIGHT or LEFT
+            ) {
 
             override fun onMove(
                 recyclerView: RecyclerView, viewHolder: ViewHolder, target: ViewHolder
@@ -124,8 +123,7 @@ class MainFragment : Fragment(R.layout.fragment_main), ItemClickListener {
             }
 
             override fun onSwiped(viewHolder: ViewHolder, direction: Int) {
-                val pos = viewHolder.absoluteAdapterPosition
-                val note = adapter.differ.currentList[pos]
+                val note = adapter.differ.currentList[viewHolder.absoluteAdapterPosition]
                 when (direction) {
                     LEFT -> showDialog(DeleteNoteDialogFragment(), TAG_DELETE_NOTE)
                     RIGHT -> {
@@ -149,16 +147,11 @@ class MainFragment : Fragment(R.layout.fragment_main), ItemClickListener {
                 DELETE -> {
                     viewModel.onDeleteItem(note.id)
                     view?.let {
-                        Snackbar.make(
-                            it,
-                            getString(R.string.note_deleted),
-                            Snackbar.LENGTH_LONG
-                        ).apply {
-                            setAction(getString(R.string.cancel)) {
-                                viewModel.insertNote(note)
+                        Snackbar.make(it, getString(R.string.note_deleted), Snackbar.LENGTH_LONG)
+                            .apply {
+                                setAction(getString(R.string.cancel)) { viewModel.insertNote(note) }
+                                show()
                             }
-                            show()
-                        }
                     }
                 }
 
@@ -170,12 +163,12 @@ class MainFragment : Fragment(R.layout.fragment_main), ItemClickListener {
     }
 
     companion object {
-        const val REQUEST_CODE = "key_delete"
-        const val MAIN_KEY = "key"
-        const val CANCEL = "0"
-        const val DELETE = "1"
-        const val MARK_COMPLETED = "2"
-        const val MARK_UNCOMPLETED = "3"
+        const val REQUEST_CODE = "request_code"
+        const val MAIN_KEY = "main_key"
+        const val CANCEL = "cancel"
+        const val DELETE = "delete"
+        const val MARK_COMPLETED = "completed"
+        const val MARK_UNCOMPLETED = "uncompleted"
         const val TAG_DELETE_NOTE = "delete_note"
         const val TAG_MARK_NOTE = "mark_note_compteted"
         const val TAG_UNMARK_NOTE = "mark_note_incompleted"

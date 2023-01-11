@@ -13,9 +13,9 @@ import com.alex.newnotes.ui.main.MainFragment.Companion.MAIN_KEY
 import com.alex.newnotes.ui.main.MainFragment.Companion.REQUEST_CODE
 
 class DeleteNoteDialogFragment : DialogFragment() {
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val builder = AlertDialog.Builder(requireContext())
-        return builder.setTitle(resources.getString(R.string.delete_note))
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
+        AlertDialog.Builder(requireContext())
+            .setTitle(resources.getString(R.string.delete_note))
             .setCancelable(true)
             .setPositiveButton(resources.getString(R.string.yes)) { dialog, _ ->
                 parentFragmentManager.setFragmentResult(REQUEST_CODE, bundleOf(MAIN_KEY to DELETE))
@@ -25,7 +25,7 @@ class DeleteNoteDialogFragment : DialogFragment() {
                 dialog.cancel()
             }
             .create()
-    }
+
 
     override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)

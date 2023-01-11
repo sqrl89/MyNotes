@@ -11,10 +11,10 @@ import com.alex.newnotes.ui.edit.EditFragment.Companion.REQUEST_KEY
 import com.alex.newnotes.ui.edit.EditFragment.Companion.SOURCE_CAMERA
 import com.alex.newnotes.ui.edit.EditFragment.Companion.SOURCE_GALLERY
 
-class ChoosePicDialogFragment: DialogFragment() {
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val builder = AlertDialog.Builder(requireContext())
-        return builder.setTitle(resources.getString(R.string.choose_image))
+class ChoosePicDialogFragment : DialogFragment() {
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
+        AlertDialog.Builder(requireContext())
+            .setTitle(resources.getString(R.string.choose_image))
             .setCancelable(true)
             .setPositiveButton(resources.getString(R.string.make_photo)) { dialog, _ ->
                 parentFragmentManager.setFragmentResult(
@@ -31,5 +31,4 @@ class ChoosePicDialogFragment: DialogFragment() {
                 dialog.cancel()
             }
             .create()
-    }
 }

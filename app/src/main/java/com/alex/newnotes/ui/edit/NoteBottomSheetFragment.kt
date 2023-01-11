@@ -133,7 +133,6 @@ class NoteBottomSheetFragment : BottomSheetDialogFragment() {
         }
     }
 
-
     private fun setImageResources(color: Int, colorString: String) {
         selectedColor = String.format(
             "#%06x",

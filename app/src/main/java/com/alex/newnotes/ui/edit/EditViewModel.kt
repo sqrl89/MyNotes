@@ -38,11 +38,17 @@ class EditViewModel @Inject constructor(
         router.exit()
     }
 
-    fun updateNote(note: Note) {
+    fun updateNoteAndClose(note: Note) {
         viewModelScope.launch {
             interactor.updateNote(note)
         }
         router.exit()
+    }
+
+    fun updateNote(note: Note) {
+        viewModelScope.launch {
+            interactor.updateNote(note)
+        }
     }
 
     fun onBackPressed() {

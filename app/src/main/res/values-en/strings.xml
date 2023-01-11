@@ -58,5 +58,8 @@
     <string name="add_reminder_button">add reminder</string>
     <string name="add_reminder">Add reminder</string>
     <string name="complete_by">"Complete by: "</string>
+    <string name="unfinished_task">You have an unfinished task!</string>
+    <string name="go">Go</string>
+    <string name="warning">warning</string>
 
 </resources>

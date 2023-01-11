@@ -23,6 +23,8 @@ data class Note(
     @ColumnInfo(name = "completion_date")
     var completionDate: String? = null,
     @ColumnInfo(name = "complete_by")
-    var completeBy: String? = null
+    var completeBy: String? = null,
+    @ColumnInfo(name = "warning")
+    var warning: Boolean = false
 
 )

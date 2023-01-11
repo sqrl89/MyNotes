@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId "com.alex.newnotes"
-        minSdk 23
+        minSdk 26
         targetSdk 33
         versionCode 1
         versionName "1.0"
@@ -37,9 +37,6 @@ android {
     }
     buildFeatures {
         viewBinding true
-    }
-    dataBinding {
-        enabled true
     }
 }
 
@@ -69,6 +66,7 @@ dependencies {
     implementation "com.leinardi.android:speed-dial:$fabVersion"
     implementation "io.github.imablanco:zoomy:$zoomyVersion"
     implementation "com.github.noowenz:CustomDateTimePicker:$dateTimePickerVersion"
+    implementation "com.github.jakebonk:NotifyMe:$notifyMeVersion"
     implementation files('libs/ds-photo-editor-sdk.aar')
 
 }

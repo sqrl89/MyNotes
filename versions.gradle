@@ -10,4 +10,5 @@ ext {
     fabVersion = "3.3.0"
     zoomyVersion = "1.0.0"
     dateTimePickerVersion = "1.01"
+    notifyMeVersion = "1.0.1"
 }

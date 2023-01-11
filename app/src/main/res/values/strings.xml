@@ -58,5 +58,8 @@
     <string name="mark_completed">Пометить выполненным?</string>
     <string name="mark_uncompleted">Пометить невыполненным?</string>
     <string name="complete_by">"Выполнить до: "</string>
+    <string name="unfinished_task">У вас невыполненная задача!</string>
+    <string name="go">Перейти</string>
+    <string name="warning">warning</string>
 
 </resources>

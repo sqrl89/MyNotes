@@ -23,8 +23,9 @@
     <color name="dark">#373737</color>
     <color name="indigo">#1a237e</color>
     <color name="icon_background">#505050</color>
+    <color name="main_primary">#505050</color>
     <color name="icon_foreground">#BABABA</color>
     <color name="ic_launcher_background">#C1C1C1</color>
-
-
+    <color name="delete_note_color">#f44336</color>
+    <color name="mark_note_color">#89E894</color>
 </resources>

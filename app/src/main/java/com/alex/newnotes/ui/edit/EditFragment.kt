@@ -1,14 +1,18 @@
 package com.alex.newnotes.ui.edit
 
+import android.Manifest
 import android.app.Activity.RESULT_OK
-import android.app.Dialog
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
-import android.os.Build
+import android.os.Build.VERSION
+import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import android.provider.MediaStore
 import android.speech.RecognizerIntent
@@ -24,10 +28,10 @@ import android.view.animation.Animation.RELATIVE_TO_SELF
 import android.view.animation.AnimationUtils
 import android.view.animation.ScaleAnimation
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -36,7 +40,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.ablanco.zoomy.Zoomy
-import com.alex.newnotes.AppActivity
 import com.alex.newnotes.R
 import com.alex.newnotes.R.anim.hide_action_button
 import com.alex.newnotes.R.anim.show_action_button
@@ -45,16 +48,12 @@ import com.alex.newnotes.data.PictureManager
 import com.alex.newnotes.data.database.Note
 import com.alex.newnotes.databinding.FragmentEditBinding
 import com.alex.newnotes.showDialog
-import com.alex.newnotes.ui.edit.dialogs.ChoosePicDialogFragment
-import com.alex.newnotes.ui.edit.dialogs.CloseDialogFragment
-import com.allyants.notifyme.NotifyMe
+import com.alex.newnotes.showSnackbar
+import com.alex.newnotes.utils.notifications.NotificationUtils
 import com.bumptech.glide.Glide
 import com.dsphotoeditor.sdk.activity.DsPhotoEditorActivity
 import com.dsphotoeditor.sdk.utils.DsPhotoEditorConstants
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.android.material.snackbar.Snackbar
-import com.noowenz.customdatetimepicker.CustomDateTimePicker
-import com.noowenz.customdatetimepicker.CustomDateTimePicker.ICustomDateTimeListener
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -66,17 +65,21 @@ import java.util.Date
 import java.util.Locale
 import java.util.Objects
 
+
 @AndroidEntryPoint
 class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListener {
+    private val viewModel: EditViewModel by viewModels()
     private lateinit var binding: FragmentEditBinding
     private val viewBinding get() = binding
-    private val viewModel: EditViewModel by viewModels()
-    private lateinit var pictureManager: PictureManager
+    private lateinit var requestNotificationPermissionLauncher: ActivityResultLauncher<String>
+    private lateinit var requestPicturePermissionLauncher: ActivityResultLauncher<String>
     private lateinit var pickSingleMediaLauncher: ActivityResultLauncher<Intent>
-    private var tmpUri: String? = null
-    private var selectedColor: String? = null
+    private lateinit var resultSpeechLauncher: ActivityResultLauncher<Intent>
+    private lateinit var pictureManager: PictureManager
     private var textToSpeech: TextToSpeech? = null
+    private var selectedColor: String? = null
     private var byDateAndTime: String? = null
+    private var tmpUri: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -113,6 +116,30 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
                     showImage(uri!!)
                 }
             }
+
+        requestNotificationPermissionLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+                if (it) reminderNotification()
+                else showSnackbar(resources.getString(R.string.grant_notify_permission))
+            }
+
+        resultSpeechLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                val data: Intent? = result.data
+                if (result.resultCode == RESULT_OK && data != null) {
+                    val res: ArrayList<String> =
+                        data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS) as ArrayList<String>
+                    viewBinding.edDescription.append(
+                        Objects.requireNonNull(res)[0] + " "
+                    )
+                }
+            }
+
+        requestPicturePermissionLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestPermission()) { result ->
+                if (result) showDialog(TAG_GET_PICTURE, TAG_GET_PICTURE)
+                else showSnackbar(resources.getString(R.string.grant_files_permission))
+            }
     }
 
     private fun setUi() {
@@ -126,11 +153,11 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
                     edTitle.setText(it?.title)
                     edDescription.setText(it?.content)
                     if (it?.creationDate?.isNotEmpty() == true) tvNewNote.text = buildString {
-                        append(getString(R.string.created))
+                        append(resources.getString(R.string.created))
                         append(it.creationDate)
                     }
                     if (it?.completed == true) tvNewNote.text = buildString {
-                        append(getString(R.string.completed))
+                        append(resources.getString(R.string.completed))
                         append(it.completionDate)
                     }
                     if (it?.uri?.isNotEmpty() == true) {
@@ -144,19 +171,22 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
                         Zoomy.Builder(requireActivity()).target(viewBinding.imMain).register()
                     } else tmpUri = it?.uri
                     if (selectedColor?.isNotEmpty() == true) {
-                        requireActivity().changeStatusBarColor(Color.parseColor(selectedColor), false)
+                        requireActivity().changeStatusBarColor(
+                            Color.parseColor(selectedColor),
+                            false
+                        )
                         editContainer.setBackgroundColor(Color.parseColor(selectedColor))
                     }
                     if (it?.completeBy?.isNotEmpty() == true) {
                         tvCompleteBy.visibility = View.VISIBLE
                         tvCompleteBy.text = buildString {
-                            append(getString(R.string.complete_by))
+                            append(resources.getString(R.string.complete_by))
                             append(it.completeBy)
                             byDateAndTime = it.completeBy
                         }
                         checkExpiration(it)
                     }
-                    if(it?.warning == true) tvCompleteBy.setTextColor(Color.RED)
+                    if (it?.warning == true) tvCompleteBy.setTextColor(Color.RED)
                 }
             }
         }
@@ -191,15 +221,8 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
 
     private fun saveNote() {
         when {
-            viewBinding.edTitle.text.isNullOrEmpty() -> {
-                Snackbar.make(
-                    requireView(),
-                    getString(R.string.fill_the_field),
-                    Snackbar.LENGTH_LONG
-                )
-                    .setAction(getString(R.string.ok)) {}
-                    .show()
-            }
+            viewBinding.edTitle.text.isNullOrEmpty() ->
+                showSnackbar(resources.getString(R.string.fill_the_field))
 
             else -> {
                 viewLifecycleOwner.lifecycleScope.launch {
@@ -213,6 +236,7 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
                                 SimpleDateFormat("dd-MM-yyyy", Locale.ROOT).format(Date())
                             completeBy = byDateAndTime
                         }.also {
+                            createNotification()
                             viewModel.onSaveClick(it)
                         }
                     }
@@ -241,8 +265,8 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
                         null -> note.completeBy
                         else -> byDateAndTime
                     }
-
                 }.also {
+                    createNotification()
                     viewModel.updateNoteAndClose(it)
                 }
             }
@@ -255,7 +279,7 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
         ) { _, bundle ->
             when (bundle.getString(KEY_FOR_SOURCE)) {
                 SOURCE_GALLERY -> {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    if (VERSION.SDK_INT >= VERSION_CODES.TIRAMISU) {
                         pickSingleMediaLauncher.launch(Intent(MediaStore.ACTION_PICK_IMAGES).apply {
                             type = "image/*"
                         })
@@ -271,16 +295,18 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
 
     private val broadcastReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(p0: Context?, intent: Intent?) {
-            when (intent!!.getStringExtra(getString(R.string.action))) {
-                getString(R.string.blue) -> changeColor(intent)
-                getString(R.string.cyan) -> changeColor(intent)
-                getString(R.string.green) -> changeColor(intent)
-                getString(R.string.orange) -> changeColor(intent)
-                getString(R.string.purple) -> changeColor(intent)
-                getString(R.string.red) -> changeColor(intent)
-                getString(R.string.yellow) -> changeColor(intent)
-                getString(R.string.dark) -> changeColor(intent)
-                getString(R.string.indigo) -> changeColor(intent)
+            activity?.resources?.apply {
+                when (intent!!.getStringExtra(resources.getString(R.string.action))) {
+                    getString(R.string.blue) -> changeColor(intent)
+                    getString(R.string.cyan) -> changeColor(intent)
+                    getString(R.string.green) -> changeColor(intent)
+                    getString(R.string.orange) -> changeColor(intent)
+                    getString(R.string.purple) -> changeColor(intent)
+                    getString(R.string.red) -> changeColor(intent)
+                    getString(R.string.yellow) -> changeColor(intent)
+                    getString(R.string.dark) -> changeColor(intent)
+                    getString(R.string.indigo) -> changeColor(intent)
+                }
             }
         }
     }
@@ -331,7 +357,10 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
                 checkPermission()
             }
             fbAddSpeech.setOnClickListener { addSpeech() }
-            fbAddReminder.setOnClickListener { addReminder() }
+            fbAddReminder.setOnClickListener {
+                if (edTitle.text.isNullOrEmpty()) showSnackbar(resources.getString(R.string.fill_the_field))
+                else addReminder()
+            }
             fbShare.setOnClickListener { share() }
         }
     }
@@ -366,30 +395,13 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
                 "ru-RU"
             )
         } else intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US")
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.speak))
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, resources.getString(R.string.speak))
         try {
             resultSpeechLauncher.launch(intent)
         } catch (e: Exception) {
-            Toast
-                .makeText(
-                    requireContext(), " " + e.message,
-                    Toast.LENGTH_SHORT
-                )
-                .show()
+            showSnackbar(" " + e.message)
         }
     }
-
-    private val resultSpeechLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            val data: Intent? = result.data
-            if (result.resultCode == RESULT_OK && data != null) {
-                val res: ArrayList<String> =
-                    data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS) as ArrayList<String>
-                viewBinding.edDescription.append(
-                    Objects.requireNonNull(res)[0] + " "
-                )
-            }
-        }
 
     private fun share() {
         val intent = Intent()
@@ -403,7 +415,7 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             type = "text/plain"
         }
-        startActivity(Intent.createChooser(intent, getString(R.string.share)))
+        startActivity(Intent.createChooser(intent, resources.getString(R.string.share)))
     }
 
     private fun speakOut() {
@@ -426,30 +438,21 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
                 }
 
                 override fun onError(utteranceId: String?) {
-                    Log.e(TAG_TTS, getString(R.string.error))
+                    showSnackbar(resources.getString(R.string.error))
                 }
             })
 
-        } else Toast.makeText(
-            requireContext(),
-            getString(R.string.description_is_empty),
-            Toast.LENGTH_SHORT
-        ).show()
+        } else showSnackbar(resources.getString(R.string.description_is_empty))
     }
 
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
             val locale = Locale("ru")
             val result: Int = textToSpeech!!.setLanguage(locale)
-            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED
-            ) {
-                Log.e(TAG_TTS, getString(R.string.unsupported_language))
-            } else {
-                viewBinding.ibPlay.isEnabled = true
-            }
-        } else {
-            Log.e(TAG_TTS, getString(R.string.error))
-        }
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED)
+                showSnackbar(resources.getString(R.string.unsupported_language))
+            else viewBinding.ibPlay.isEnabled = true
+        } else showSnackbar(resources.getString(R.string.error))
     }
 
     private fun onBackPressed() {
@@ -468,7 +471,7 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
                     if (edTitle.text.isNotEmpty() ||
                         edDescription.text.isNotEmpty() ||
                         tmpUri?.isNotEmpty() == true
-                    ) showDialog(CloseDialogFragment(), TAG_CLOSE_EDIT_FRAGMENT)
+                    ) showDialog(TAG_CLOSE_EDIT_FRAGMENT, TAG_CLOSE_EDIT_FRAGMENT)
                     else viewModel.onBackPressed()
                 }
                 if (value != null) {
@@ -478,7 +481,7 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
                         selectedColor != value?.color ||
                         byDateAndTime != value?.completeBy ||
                         byDateAndTime == DELETE_KEY
-                    ) showDialog(CloseDialogFragment(), TAG_CLOSE_EDIT_FRAGMENT)
+                    ) showDialog(TAG_CLOSE_EDIT_FRAGMENT, TAG_CLOSE_EDIT_FRAGMENT)
                     else viewModel.onBackPressed()
                 }
             }
@@ -510,23 +513,12 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
     }
 
     private fun checkPermission() {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            showDialog(ChoosePicDialogFragment(), TAG_GET_PICTURE)
+        return if (VERSION.SDK_INT >= VERSION_CODES.Q) {
+            showDialog(TAG_GET_PICTURE, TAG_GET_PICTURE)
         } else {
-            requestPermissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            requestPicturePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
         }
     }
-
-    private val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { result ->
-            if (result) {
-                showDialog(ChoosePicDialogFragment(), TAG_GET_PICTURE)
-            } else Toast.makeText(
-                requireContext(),
-                getString(R.string.give_permission),
-                Toast.LENGTH_SHORT
-            ).show()
-        }
 
     private fun descriptionTextWatcher() {
         viewBinding.edDescription.addTextChangedListener(object : TextWatcher {
@@ -551,74 +543,69 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
     }
 
     private fun addReminder() {
-        var selectedDateAndTime = Calendar.getInstance()
-        CustomDateTimePicker(requireActivity(), object : ICustomDateTimeListener {
-            override fun onSet(
-                dialog: Dialog,
-                calendarSelected: Calendar,
-                dateSelected: Date,
-                year: Int,
-                monthFullName: String,
-                monthShortName: String,
-                monthNumber: Int,
-                day: Int,
-                weekDayFullName: String,
-                weekDayShortName: String,
-                hour24: Int,
-                hour12: Int,
-                min: Int,
-                sec: Int,
-                AM_PM: String
-            ) {
-                selectedDateAndTime = calendarSelected
-                byDateAndTime = "${String.format("%02d", day)}-${
-                    String.format("%02d", monthNumber + 1) }-$year ${String.format("%02d", hour24)}:${String.format("%02d", min)}"
-                viewBinding.tvCompleteBy.visibility = View.VISIBLE
-                viewBinding.tvCompleteBy.text = buildString {
-                    append(getString(R.string.complete_by))
-                    append(byDateAndTime)
-                }
-                createNotification(byDateAndTime!!)
-            }
+        val currentDate = Calendar.getInstance()
+        val date: Calendar = Calendar.getInstance()
+        DatePickerDialog(
+            requireActivity(), R.style.DatePickerDialog,
+            { _, year, monthOfYear, dayOfMonth ->
+                date.set(year, monthOfYear, dayOfMonth)
+                TimePickerDialog(
+                    requireActivity(), R.style.DatePickerDialog,
+                    { _, hourOfDay, minute ->
+                        date.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                        date.set(Calendar.MINUTE, minute)
+                        byDateAndTime = "${String.format("%02d", dayOfMonth)}-${
+                            String.format("%02d", monthOfYear + 1)
+                        }-$year ${String.format("%02d", hourOfDay)}:${String.format("%02d", minute)}"
+                        viewBinding.tvCompleteBy.visibility = View.VISIBLE
+                        viewBinding.tvCompleteBy.text = buildString {
+                            append(resources.getString(R.string.complete_by))
+                            append(byDateAndTime)
+                        }
+                        viewModel.note.value?.warning = false
+                        viewBinding.tvCompleteBy.setTextColor(Color.BLACK)
+                    },
+                    currentDate[Calendar.HOUR_OF_DAY],
+                    currentDate[Calendar.MINUTE] + 1, true
+                ).show()
+            }, currentDate[Calendar.YEAR], currentDate[Calendar.MONTH],
+            currentDate[Calendar.DATE]
+        ).show()
+    }
 
-            override fun onCancel() {}
-        }).apply {
-            setMaxMinDisplayDate(
-                minDate = Calendar.getInstance().apply { add(Calendar.MINUTE, 1) }.timeInMillis,
-                maxDate = Calendar.getInstance().apply { add(Calendar.YEAR, 1) }.timeInMillis
-            )
-            setMaxMinDisplayedTime(1)
-            setDate(selectedDateAndTime)
-            showDialog()
+    private fun createNotification() {
+        if(byDateAndTime != null && byDateAndTime != "deleted"){
+            if (VERSION.SDK_INT >= VERSION_CODES.TIRAMISU) {
+                if (ContextCompat.checkSelfPermission(
+                        requireContext(),
+                        Manifest.permission.POST_NOTIFICATIONS
+                    ) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
+                        requireContext(),
+                        Manifest.permission.SCHEDULE_EXACT_ALARM
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) reminderNotification()
+                else requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else reminderNotification()
         }
     }
 
-    private fun createNotification(time: String) {
-        val calendarTime = Calendar.getInstance()
-        val sdf = SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.ROOT)
-        calendarTime.time = sdf.parse(time)!!
-        val color = Color.parseColor(viewModel.note.value?.color ?: DEFAULT_COLOR)
-        val red = Color.red(color)
-        val green = Color.green(color)
-        val blue = Color.blue(color)
-        val intent = Intent(requireActivity(), AppActivity::class.java)
-        val notifyMe: NotifyMe.Builder = NotifyMe.Builder(requireActivity().applicationContext)
-        notifyMe.title(getString(R.string.unfinished_task))
-        notifyMe.content(viewModel.note.value?.title.toString())
-        notifyMe.color(red, green, blue, 0)
-        notifyMe.time(calendarTime)
-        notifyMe.large_icon(R.drawable.ic_add_reminder)
-        notifyMe.small_icon(R.drawable.ic_add_reminder)
-        notifyMe.addAction(intent,getString(R.string.go))
-        notifyMe.build()
-    }
-
-    private fun checkExpiration(note: Note){
-        val completeBy = LocalDateTime.parse(note.completeBy, DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"))
+    private fun checkExpiration(note: Note) {
+        val completeBy =
+            LocalDateTime.parse(note.completeBy, DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"))
         if (LocalDateTime.now().isAfter(completeBy)) {
             note.warning = true
             viewModel.updateNote(note)
         }
+    }
+
+    private fun reminderNotification() {
+        val notificationUtils = NotificationUtils(requireContext())
+        val calendar = Calendar.getInstance()
+        val sdf = SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.ROOT)
+        val title = viewBinding.edTitle.text.toString()
+        val color = Color.parseColor(viewModel.note.value?.color ?: DEFAULT_COLOR)
+        calendar.time = sdf.parse(byDateAndTime!!)!!
+        notificationUtils.setReminder(calendar.timeInMillis, title, color)
     }
 
     override fun onDestroy() {
@@ -647,14 +634,12 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
         const val SAVE_KEY = "save"
         const val CLOSE_KEY = "close"
         const val TAG_CLOSE_EDIT_FRAGMENT = "close_fragment"
-        const val TAG_TTS = "TTS"
+        const val CHANNEL_ID = "notification_channel"
 
-        fun newInstance(note: Note): EditFragment {
-            val b = Bundle()
-            val fragment = EditFragment()
-            b.putInt(NOTE_KEY, note.id)
-            fragment.arguments = b
-            return fragment
+        fun newInstance(note: Note) = EditFragment().apply {
+            arguments = Bundle().apply {
+                putInt(NOTE_KEY, note.id)
+            }
         }
     }
 }

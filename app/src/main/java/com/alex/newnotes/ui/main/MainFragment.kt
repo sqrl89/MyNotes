@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.SearchView.OnQueryTextListener
 import androidx.appcompat.widget.SearchView
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -15,12 +16,10 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.LEFT
 import androidx.recyclerview.widget.ItemTouchHelper.RIGHT
-import androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback
-import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.alex.newnotes.Const.FIRST_START_KEY
-import com.alex.newnotes.Const.PREFS_NAME
+import com.alex.newnotes.utils.Const.FIRST_START_KEY
+import com.alex.newnotes.utils.Const.PREFS_NAME
 import com.alex.newnotes.R
 import com.alex.newnotes.changeStatusBarColor
 import com.alex.newnotes.checkFirstRun
@@ -28,9 +27,7 @@ import com.alex.newnotes.data.database.Note
 import com.alex.newnotes.databinding.FragmentMainBinding
 import com.alex.newnotes.showDialog
 import com.alex.newnotes.ui.main.NoteAdapter.ItemClickListener
-import com.alex.newnotes.ui.main.dialogs.DeleteNoteDialogFragment
-import com.alex.newnotes.ui.main.dialogs.MarkCompletedDialogFragment
-import com.alex.newnotes.ui.main.dialogs.MarkUncompletedDialogFragment
+import com.alex.newnotes.utils.SwipeCallbacks
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -50,6 +47,21 @@ class MainFragment : Fragment(R.layout.fragment_main), ItemClickListener {
         if (firstStart) checkFirstRun()
         setUi()
         collectNotes()
+        NotificationManagerCompat.from(requireContext()).cancelAll()
+        val swipeHandler = object : SwipeCallbacks(requireContext()) {
+            override fun onSwiped(viewHolder: ViewHolder, direction: Int) {
+                val note = adapter.differ.currentList[viewHolder.absoluteAdapterPosition]
+                when (direction) {
+                    LEFT -> showDialog(TAG_DELETE_NOTE, TAG_DELETE_NOTE)
+                    RIGHT -> {
+                        if (!note.completed) showDialog(TAG_MARK_NOTE, TAG_MARK_NOTE)
+                        else showDialog(TAG_UNMARK_NOTE, TAG_UNMARK_NOTE)
+                    }
+                }
+                setFragmentListeners(note, viewHolder)
+            }
+        }
+        ItemTouchHelper(swipeHandler).attachToRecyclerView(viewBinding.rcView)
     }
 
     private fun setUi() {
@@ -67,7 +79,6 @@ class MainFragment : Fragment(R.layout.fragment_main), ItemClickListener {
                     fbNew.hide()
                 } else fbNew.show()
             }
-            swipeItem().attachToRecyclerView(rcView)
             onQueryChange()
         }
     }
@@ -103,42 +114,6 @@ class MainFragment : Fragment(R.layout.fragment_main), ItemClickListener {
         viewModel.onNoteItemClick(note)
     }
 
-    private fun swipeItem(): ItemTouchHelper {
-        return ItemTouchHelper(object :
-            SimpleCallback(
-                0,
-//                UP or DOWN,
-                RIGHT or LEFT
-            ) {
-
-            override fun onMove(
-                recyclerView: RecyclerView, viewHolder: ViewHolder, target: ViewHolder
-            ): Boolean {
-//                adapter.onItemMove(
-//                    viewHolder.absoluteAdapterPosition,
-//                    target.absoluteAdapterPosition
-//                )
-//                return true
-                return false
-            }
-
-            override fun onSwiped(viewHolder: ViewHolder, direction: Int) {
-                val note = adapter.differ.currentList[viewHolder.absoluteAdapterPosition]
-                when (direction) {
-                    LEFT -> showDialog(DeleteNoteDialogFragment(), TAG_DELETE_NOTE)
-                    RIGHT -> {
-                        if (!note.completed) showDialog(
-                            MarkCompletedDialogFragment(),
-                            TAG_MARK_NOTE
-                        )
-                        else showDialog(MarkUncompletedDialogFragment(), TAG_UNMARK_NOTE)
-                    }
-                }
-                setFragmentListeners(note, viewHolder)
-            }
-        })
-    }
-
     private fun setFragmentListeners(note: Note, viewHolder: ViewHolder) {
         activity?.supportFragmentManager?.setFragmentResultListener(
             REQUEST_CODE, viewLifecycleOwner
@@ -147,9 +122,17 @@ class MainFragment : Fragment(R.layout.fragment_main), ItemClickListener {
                 DELETE -> {
                     viewModel.onDeleteItem(note.id)
                     view?.let {
-                        Snackbar.make(it, getString(R.string.note_deleted), Snackbar.LENGTH_LONG)
+                        Snackbar.make(
+                            it,
+                            resources.getString(R.string.note_deleted),
+                            Snackbar.LENGTH_LONG
+                        )
                             .apply {
-                                setAction(getString(R.string.cancel)) { viewModel.insertNote(note) }
+                                setAction(resources.getString(R.string.cancel)) {
+                                    viewModel.insertNote(
+                                        note
+                                    )
+                                }
                                 show()
                             }
                     }
@@ -172,5 +155,6 @@ class MainFragment : Fragment(R.layout.fragment_main), ItemClickListener {
         const val TAG_DELETE_NOTE = "delete_note"
         const val TAG_MARK_NOTE = "mark_note_compteted"
         const val TAG_UNMARK_NOTE = "mark_note_incompleted"
+        const val TAG_GREETINGS = "greetings"
     }
 }

@@ -5,6 +5,8 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
 
     <application
         android:name=".App"
@@ -17,15 +19,7 @@
         android:theme="@style/Theme.NewNotes"
         tools:targetApi="32">
 
-        <receiver android:name="com.allyants.notifyme.NotificationPublisher" />
-        <receiver android:name="com.allyants.notifyme.BootNotifyMe"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-
-                <category android:name="android.intent.category.HOME" />
-            </intent-filter>
-        </receiver>
+        <receiver android:name="com.alex.newnotes.utils.notifications.ReminderBroadcast"/>
 
         <activity
             android:name=".AppActivity"

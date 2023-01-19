@@ -13,6 +13,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.alex.newnotes.R
 import com.alex.newnotes.databinding.FragmentEditColorsBinding
+import com.alex.newnotes.utils.CustomFragmentDialog
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
@@ -29,12 +30,10 @@ class NoteBottomSheetFragment : BottomSheetDialogFragment() {
         const val COLLAPSED = "COLLAPSED"
         const val HIDDEN = "HIDDEN"
 
-        fun newInstance(id: Int?): NoteBottomSheetFragment {
-            val args = Bundle()
-            val fragment = NoteBottomSheetFragment()
-            fragment.arguments = args
-            noteId = id
-            return fragment
+        fun newInstance(id: Int?) = NoteBottomSheetFragment().apply {
+            arguments = Bundle().apply {
+                noteId = id
+            }
         }
     }
 
@@ -94,39 +93,39 @@ class NoteBottomSheetFragment : BottomSheetDialogFragment() {
             radioGroup.setOnCheckedChangeListener { _, checkedId ->
                 when (checkedId) {
                     R.id.rbDark -> {
-                        setImageResources(R.color.dark, getString(R.string.dark))
+                        setImageResources(R.color.dark, resources.getString(R.string.dark))
                     }
 
                     R.id.rbBlue -> {
-                        setImageResources(R.color.blue, getString(R.string.blue))
+                        setImageResources(R.color.blue, resources.getString(R.string.blue))
                     }
 
                     R.id.rbCyan -> {
-                        setImageResources(R.color.cyan, getString(R.string.cyan))
+                        setImageResources(R.color.cyan, resources.getString(R.string.cyan))
                     }
 
                     R.id.rbYellow -> {
-                        setImageResources(R.color.yellow, getString(R.string.yellow))
+                        setImageResources(R.color.yellow, resources.getString(R.string.yellow))
                     }
 
                     R.id.rbRed -> {
-                        setImageResources(R.color.red, getString(R.string.red))
+                        setImageResources(R.color.red, resources.getString(R.string.red))
                     }
 
                     R.id.rbGreen -> {
-                        setImageResources(R.color.green, getString(R.string.green))
+                        setImageResources(R.color.green, resources.getString(R.string.green))
                     }
 
                     R.id.rbOrange -> {
-                        setImageResources(R.color.orange, getString(R.string.orange))
+                        setImageResources(R.color.orange, resources.getString(R.string.orange))
                     }
 
                     R.id.rbIndigo -> {
-                        setImageResources(R.color.indigo, getString(R.string.indigo))
+                        setImageResources(R.color.indigo, resources.getString(R.string.indigo))
                     }
 
                     R.id.rbPurple -> {
-                        setImageResources(R.color.purple, getString(R.string.purple))
+                        setImageResources(R.color.purple, resources.getString(R.string.purple))
                     }
                 }
             }
@@ -142,9 +141,9 @@ class NoteBottomSheetFragment : BottomSheetDialogFragment() {
     }
 
     private fun sendBroadcast(colorString: String) {
-        val intent = Intent(getString(R.string.bottom_sheet_action))
-        intent.putExtra(getString(R.string.action), colorString)
-        intent.putExtra(getString(R.string.selected_color), selectedColor)
+        val intent = Intent(resources.getString(R.string.bottom_sheet_action))
+        intent.putExtra(resources.getString(R.string.action), colorString)
+        intent.putExtra(resources.getString(R.string.selected_color), selectedColor)
         LocalBroadcastManager.getInstance(requireContext()).sendBroadcast(intent)
     }
 }

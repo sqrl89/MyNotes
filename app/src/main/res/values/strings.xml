@@ -50,8 +50,9 @@
     <string name="unsupported_language">Извините, этот язык не поддерживается</string>
     <string name="error">Ошибка!</string>
     <string name="main_greetings">Приветствуем!</string>
-    <string name="main_greetings_text">- Чтобы добавить заметку нажмите \"+\".\n\n- Удалить заметку - свайпните влево.\n\n- Пометить заметку выполненной - свайпните вправо.\n\n- В открытой заметке вы можете добавить цвет, изображение, набрать текст голосом, а также поделиться информацией.\n\n- Вы можете увеличить изображение, растянув его.\n\n- Приятного пользования!</string>
-    <string name="give_permission">Для работы с изображениями разрешите приложению доступ к файлам.</string>
+    <string name="main_greetings_text">- Чтобы добавить заметку нажмите \"+\".\n\n- Удалить заметку - свайпните влево.\n\n- Пометить заметку выполненной - свайпните вправо.\n\n- В открытой заметке вы можете добавить цвет, изображение, напоминание, набрать текст голосом, а также поделиться информацией.\n\n- Вы можете увеличить изображение, растянув его.\n\n- Приятного пользования!</string>
+    <string name="grant_files_permission">Для работы с изображениями разрешите приложению доступ к файлам.</string>
+    <string name="grant_notify_permission">Разрешите приложению использовать уведомления.</string>
     <string name="created">"Дата создания: "</string>
     <string name="completed">"Дата выполнения: "</string>
     <string name="image_done">image done</string>
@@ -61,5 +62,7 @@
     <string name="unfinished_task">У вас невыполненная задача!</string>
     <string name="go">Перейти</string>
     <string name="warning">warning</string>
+    <string name="notification_channel" translatable="false">Notification Channel</string>
+    <string name="notification_contains" translatable="false">This notification contains important announcement</string>
 
 </resources>

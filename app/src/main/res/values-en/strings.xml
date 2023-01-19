@@ -48,8 +48,8 @@
     <string name="unsupported_language">Unsupported language</string>
     <string name="error">Error!</string>
     <string name="main_greetings">Hello!</string>
-    <string name="main_greetings_text">- To add a note, press \"+\".\n\n- To delete a note - swipe left.\n\n- To mark completed - swipe right.\n\n- In an open note, you can add color, image, type text by voice, and share information.\n \n- You can enlarge the image by stretching it.\n\n- Enjoy!</string>
-    <string name="give_permission">To work with images give permission to access files.</string>
+    <string name="main_greetings_text">- To add a note, press \"+\".\n\n- To delete a note - swipe left.\n\n- To mark completed - swipe right.\n\n- In an open note, you can add color, image, reminder, type text by voice, and share information.\n \n- You can enlarge the image by stretching it.\n\n- Enjoy!</string>
+    <string name="grant_files_permission">To work with images grant permission to access files.</string>
     <string name="mark_completed">Mark completed?</string>
     <string name="created">"Created: "</string>
     <string name="image_done">image done</string>
@@ -61,5 +61,6 @@
     <string name="unfinished_task">You have an unfinished task!</string>
     <string name="go">Go</string>
     <string name="warning">warning</string>
+    <string name="grant_notify_permission">Please grant Notification permission from App Settings</string>
 
 </resources>

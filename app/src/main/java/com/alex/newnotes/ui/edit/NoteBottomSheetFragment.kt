@@ -13,7 +13,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.alex.newnotes.R
 import com.alex.newnotes.databinding.FragmentEditColorsBinding
-import com.alex.newnotes.utils.CustomFragmentDialog
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 

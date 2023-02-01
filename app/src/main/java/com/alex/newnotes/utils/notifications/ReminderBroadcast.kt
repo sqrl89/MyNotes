@@ -6,10 +6,11 @@ import android.content.Intent
 import androidx.core.app.NotificationManagerCompat
 
 class ReminderBroadcast : BroadcastReceiver() {
+
     override fun onReceive(context: Context?, intent: Intent?) {
-        val notificationUtils = NotificationUtils(context!!)
+        val notificationUtils = NotificationUtilsImpl(context!!)
         val title = intent?.getStringExtra("title")
-        val color = intent?.getIntExtra("color", 0)
+        val color = intent?.getStringExtra("color")
         val builder = notificationUtils.setNotification(title!!, color!!)
         with(NotificationManagerCompat.from(context)) {
             notificationUtils.manager!!.notify(
@@ -19,3 +20,4 @@ class ReminderBroadcast : BroadcastReceiver() {
         }
     }
 }
+

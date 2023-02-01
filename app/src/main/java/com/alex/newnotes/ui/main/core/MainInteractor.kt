@@ -11,6 +11,8 @@ interface MainInteractor {
 
     suspend fun insertNote(note: Note)
 
+    suspend fun updateNote(note: Note)
+
     suspend fun markCompleted(note: Note)
 
     suspend fun markUncompleted(note: Note)

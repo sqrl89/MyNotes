@@ -2,7 +2,6 @@ package com.alex.newnotes.ui.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.alex.newnotes.data.database.Dao
 import com.alex.newnotes.data.database.Note
 import com.alex.newnotes.ui.Screens
 import com.alex.newnotes.ui.main.core.MainInteractor
@@ -26,7 +25,7 @@ class MainViewModel @Inject constructor(
     fun getNotes() =
         searchQuery.flatMapLatest { query ->
             interactor.getNotes(query)
-        }.shareIn(viewModelScope, SharingStarted.Eagerly)
+        }.shareIn(viewModelScope, SharingStarted.WhileSubscribed(5000))
 
     fun onNoteItemClick(note: Note) {
         router.navigateTo(Screens.Edit(note))
@@ -42,7 +41,13 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun onDeleteItem(noteId: Int) {
+    fun updateNote(note: Note) {
+        viewModelScope.launch {
+            interactor.updateNote(note)
+        }
+    }
+
+    fun onDeleteNote(noteId: Int) {
         viewModelScope.launch {
             interactor.deleteNote(noteId)
         }
@@ -54,13 +59,13 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun onMarkCompleted(note: Note){
+    fun onMarkCompleted(note: Note) {
         viewModelScope.launch {
             interactor.markCompleted(note)
         }
     }
 
-    fun onMarkUncompleted(note: Note){
+    fun onMarkUncompleted(note: Note) {
         viewModelScope.launch {
             interactor.markUncompleted(note)
         }

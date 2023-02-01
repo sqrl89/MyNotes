@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback
 import androidx.recyclerview.widget.RecyclerView
 import com.alex.newnotes.R
 
-abstract class SwipeCallbacks(val context: Context) : SimpleCallback(0, LEFT or RIGHT) {
+abstract class SwipeCallbacks (val context: Context) : SimpleCallback(0, LEFT or RIGHT) {
 
     private val deleteIcon = ContextCompat.getDrawable(context, R.drawable.ic_delete_note)
     private val doneIcon = ContextCompat.getDrawable(context, R.drawable.ic_done_check)
@@ -25,11 +25,6 @@ abstract class SwipeCallbacks(val context: Context) : SimpleCallback(0, LEFT or 
         viewHolder: RecyclerView.ViewHolder,
         target: RecyclerView.ViewHolder
     ): Boolean {
-//                adapter.onItemMove(
-//                    viewHolder.absoluteAdapterPosition,
-//                    target.absoluteAdapterPosition
-//                )
-//                return true
         return false
     }
 

@@ -3,8 +3,6 @@ package com.alex.newnotes
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import by.kirich1409.viewbindingdelegate.viewBinding
-import com.alex.newnotes.databinding.ActivityMainBinding
 import com.alex.newnotes.ui.Screens
 import com.github.terrakok.cicerone.Navigator
 import com.github.terrakok.cicerone.NavigatorHolder

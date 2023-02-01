@@ -2,6 +2,7 @@ package com.alex.newnotes.ui.main
 
 import android.graphics.Color
 import android.graphics.Paint
+
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,11 +24,7 @@ class NoteAdapter(private val onItemClick: ItemClickListener) : Adapter<NoteAdap
         fun onItemClick(note: Note)
     }
 
-//    var modList = differ.currentList.toMutableList()
-
     fun updateList(list: List<Note>) {
-//        modList = list.toMutableList()
-//        differ.submitList(modList)
         differ.submitList(list)
     }
 
@@ -99,21 +96,6 @@ class NoteAdapter(private val onItemClick: ItemClickListener) : Adapter<NoteAdap
             }
         }
     }
-
-//    fun onItemMove(from: Int, to: Int): Boolean {
-//        if (from < to) {
-//            for (i in from until to) {
-//                Collections.swap(modList, i, i + 1)
-//            }
-//        } else {
-//            for (i in from downTo to + 1) {
-//                Collections.swap(modList, i, i - 1)
-//            }
-//        }
-//        notifyItemMoved(from, to)
-//        return true
-//    }
-
 }
 
 

@@ -7,12 +7,22 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import com.alex.newnotes.R
-import com.alex.newnotes.ui.edit.EditFragment
+import com.alex.newnotes.ui.edit.EditFragment.Companion.CLOSE_KEY
+import com.alex.newnotes.ui.edit.EditFragment.Companion.KEY_FOR_SOURCE
+import com.alex.newnotes.ui.edit.EditFragment.Companion.REQUEST_KEY
+import com.alex.newnotes.ui.edit.EditFragment.Companion.SAVE_KEY
+import com.alex.newnotes.ui.edit.EditFragment.Companion.SOURCE_CAMERA
+import com.alex.newnotes.ui.edit.EditFragment.Companion.SOURCE_GALLERY
 import com.alex.newnotes.ui.edit.EditFragment.Companion.TAG_CLOSE_EDIT_FRAGMENT
 import com.alex.newnotes.ui.edit.EditFragment.Companion.TAG_GET_PICTURE
-import com.alex.newnotes.ui.main.MainFragment
-import com.alex.newnotes.ui.main.MainFragment.Companion.TAG_GREETINGS
+import com.alex.newnotes.ui.main.MainFragment.Companion.CANCEL
+import com.alex.newnotes.ui.main.MainFragment.Companion.DELETE
+import com.alex.newnotes.ui.main.MainFragment.Companion.MAIN_KEY
+import com.alex.newnotes.ui.main.MainFragment.Companion.MARK_COMPLETED
+import com.alex.newnotes.ui.main.MainFragment.Companion.MARK_UNCOMPLETED
+import com.alex.newnotes.ui.main.MainFragment.Companion.REQUEST_CODE
 import com.alex.newnotes.ui.main.MainFragment.Companion.TAG_DELETE_NOTE
+import com.alex.newnotes.ui.main.MainFragment.Companion.TAG_GREETINGS
 import com.alex.newnotes.ui.main.MainFragment.Companion.TAG_MARK_NOTE
 import com.alex.newnotes.ui.main.MainFragment.Companion.TAG_UNMARK_NOTE
 
@@ -33,9 +43,7 @@ class CustomFragmentDialog : DialogFragment() {
                         .setCancelable(true)
                         .setPositiveButton(resources.getString(R.string.yes)) { dialog, _ ->
                             parentFragmentManager.setFragmentResult(
-                                MainFragment.REQUEST_CODE, bundleOf(
-                                    MainFragment.MAIN_KEY to MainFragment.DELETE
-                                )
+                                REQUEST_CODE, bundleOf(MAIN_KEY to DELETE)
                             )
                             dialog.cancel()
                         }
@@ -51,8 +59,8 @@ class CustomFragmentDialog : DialogFragment() {
                         .setCancelable(true)
                         .setPositiveButton(resources.getString(R.string.yes)) { dialog, _ ->
                             parentFragmentManager.setFragmentResult(
-                                MainFragment.REQUEST_CODE,
-                                bundleOf(MainFragment.MAIN_KEY to MainFragment.MARK_COMPLETED)
+                                REQUEST_CODE,
+                                bundleOf(MAIN_KEY to MARK_COMPLETED)
                             )
                             dialog.cancel()
                         }
@@ -68,8 +76,8 @@ class CustomFragmentDialog : DialogFragment() {
                         .setCancelable(true)
                         .setPositiveButton(resources.getString(R.string.yes)) { dialog, _ ->
                             parentFragmentManager.setFragmentResult(
-                                MainFragment.REQUEST_CODE,
-                                bundleOf(MainFragment.MAIN_KEY to MainFragment.MARK_UNCOMPLETED)
+                                REQUEST_CODE,
+                                bundleOf(MAIN_KEY to MARK_UNCOMPLETED)
                             )
                             dialog.cancel()
                         }
@@ -97,15 +105,15 @@ class CustomFragmentDialog : DialogFragment() {
                         .setCancelable(true)
                         .setPositiveButton(resources.getString(R.string.make_photo)) { dialog, _ ->
                             parentFragmentManager.setFragmentResult(
-                                EditFragment.REQUEST_KEY,
-                                bundleOf(EditFragment.KEY_FOR_SOURCE to EditFragment.SOURCE_CAMERA)
+                                REQUEST_KEY,
+                                bundleOf(KEY_FOR_SOURCE to SOURCE_CAMERA)
                             )
                             dialog.cancel()
                         }
                         .setNegativeButton(resources.getString(R.string.from_gallery)) { dialog, _ ->
                             parentFragmentManager.setFragmentResult(
-                                EditFragment.REQUEST_KEY,
-                                bundleOf(EditFragment.KEY_FOR_SOURCE to EditFragment.SOURCE_GALLERY)
+                                REQUEST_KEY,
+                                bundleOf(KEY_FOR_SOURCE to SOURCE_GALLERY)
                             )
                             dialog.cancel()
                         }
@@ -118,15 +126,15 @@ class CustomFragmentDialog : DialogFragment() {
                         .setCancelable(true)
                         .setPositiveButton(resources.getString(R.string.yes)) { dialog, _ ->
                             parentFragmentManager.setFragmentResult(
-                                EditFragment.REQUEST_KEY,
-                                bundleOf(EditFragment.KEY_FOR_SOURCE to EditFragment.SAVE_KEY)
+                                REQUEST_KEY,
+                                bundleOf(KEY_FOR_SOURCE to SAVE_KEY)
                             )
                             dialog.cancel()
                         }
                         .setNegativeButton(resources.getString(R.string.no)) { dialog, _ ->
                             parentFragmentManager.setFragmentResult(
-                                EditFragment.REQUEST_KEY,
-                                bundleOf(EditFragment.KEY_FOR_SOURCE to EditFragment.CLOSE_KEY)
+                                REQUEST_KEY,
+                                bundleOf(KEY_FOR_SOURCE to CLOSE_KEY)
                             )
                             dialog.cancel()
                         }
@@ -140,20 +148,16 @@ class CustomFragmentDialog : DialogFragment() {
 
     override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)
-        parentFragmentManager.setFragmentResult(
-            MainFragment.REQUEST_CODE,
-            bundleOf(MainFragment.MAIN_KEY to MainFragment.CANCEL)
-        )
+        parentFragmentManager.setFragmentResult(REQUEST_CODE, bundleOf(MAIN_KEY to CANCEL))
     }
 
     companion object {
         private const val PARAM = "param"
 
-        fun newInstance(param: String?) = CustomFragmentDialog().apply {
+        fun newInstance(param: String) = CustomFragmentDialog().apply {
             arguments = Bundle().apply {
                 putString(PARAM, param)
             }
         }
     }
-
 }

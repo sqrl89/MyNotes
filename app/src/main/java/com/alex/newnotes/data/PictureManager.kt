@@ -9,6 +9,7 @@ import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
 import com.alex.newnotes.BuildConfig
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.io.InputStream
 import java.text.SimpleDateFormat
@@ -17,15 +18,9 @@ import java.util.Locale
 
 class PictureManager(
     activityResultRegistry: ActivityResultRegistry,
-    private val application: Application,
+    @ApplicationContext private val application: Application,
     private val callback: (pictureUri: Uri?) -> Unit
 ) {
-    private companion object {
-        private const val REGISTRY_KEY_GET_CONTENT = "PictureWorkContent"
-        private const val REGISTRY_KEY_TAKE_PHOTO = "PictureWorkPhoto"
-        private const val REGISTRY_KEY_PERMISSION = "PictureWorkPermission"
-    }
-
     private lateinit var photoUri: Uri
 
     fun pickPhoto() {
@@ -91,6 +86,12 @@ class PictureManager(
                 }
             }
         }
+    }
+
+    private companion object {
+        private const val REGISTRY_KEY_GET_CONTENT = "PictureWorkContent"
+        private const val REGISTRY_KEY_TAKE_PHOTO = "PictureWorkPhoto"
+        private const val REGISTRY_KEY_PERMISSION = "PictureWorkPermission"
     }
 }
 

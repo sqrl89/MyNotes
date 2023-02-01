@@ -3,6 +3,7 @@ package com.alex.newnotes.data.database
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.io.Serializable
 
 @Entity(tableName = "Notes")
 data class Note(
@@ -26,5 +27,4 @@ data class Note(
     var completeBy: String? = null,
     @ColumnInfo(name = "warning")
     var warning: Boolean = false
-
-)
+) : Serializable

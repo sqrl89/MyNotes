@@ -25,9 +25,4 @@ interface Dao {
     @Query("SELECT * FROM notes WHERE id = :noteId")
     suspend fun getNoteDetails(noteId: Int): Note
 
-//    @Update(onConflict = OnConflictStrategy.REPLACE)
-//    suspend fun updateList(notes: List<Note>) {
-//        Log.e("Error", "updateList: $notes")
-//    }
-
 }

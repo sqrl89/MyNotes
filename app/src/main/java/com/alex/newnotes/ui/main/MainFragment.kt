@@ -18,20 +18,22 @@ import androidx.recyclerview.widget.ItemTouchHelper.LEFT
 import androidx.recyclerview.widget.ItemTouchHelper.RIGHT
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.alex.newnotes.utils.Const.FIRST_START_KEY
-import com.alex.newnotes.utils.Const.PREFS_NAME
 import com.alex.newnotes.R
-import com.alex.newnotes.changeStatusBarColor
-import com.alex.newnotes.checkFirstRun
 import com.alex.newnotes.data.database.Note
 import com.alex.newnotes.databinding.FragmentMainBinding
-import com.alex.newnotes.showDialog
 import com.alex.newnotes.ui.main.NoteAdapter.ItemClickListener
+import com.alex.newnotes.utils.Const.FIRST_START_KEY
+import com.alex.newnotes.utils.Const.PREFS_NAME
 import com.alex.newnotes.utils.SwipeCallbacks
+import com.alex.newnotes.utils.changeStatusBarColor
+import com.alex.newnotes.utils.checkFirstRun
+import com.alex.newnotes.utils.showDialog
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @AndroidEntryPoint
 class MainFragment : Fragment(R.layout.fragment_main), ItemClickListener {
@@ -39,12 +41,12 @@ class MainFragment : Fragment(R.layout.fragment_main), ItemClickListener {
     private val viewBinding: FragmentMainBinding by viewBinding()
     private val adapter: NoteAdapter = NoteAdapter(this)
     private lateinit var sharedPref: SharedPreferences
+    private var checkList: List<Note>? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         sharedPref = requireActivity().getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        val firstStart = sharedPref.getBoolean(FIRST_START_KEY, true)
-        if (firstStart) checkFirstRun()
+        if (sharedPref.getBoolean(FIRST_START_KEY, true)) checkFirstRun()
         setUi()
         collectNotes()
         NotificationManagerCompat.from(requireContext()).cancelAll()
@@ -86,8 +88,9 @@ class MainFragment : Fragment(R.layout.fragment_main), ItemClickListener {
     private fun collectNotes() {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.getNotes().collectLatest { list ->
+                viewModel.getNotes().collect { list ->
                     adapter.updateList(list)
+                    checkList = list
                     if (list.isEmpty()) viewBinding.tvNoElements.visibility = View.VISIBLE
                     else viewBinding.tvNoElements.visibility = View.GONE
                 }
@@ -120,7 +123,7 @@ class MainFragment : Fragment(R.layout.fragment_main), ItemClickListener {
         ) { _, bundle ->
             when (bundle.getString(MAIN_KEY)) {
                 DELETE -> {
-                    viewModel.onDeleteItem(note.id)
+                    viewModel.onDeleteNote(note.id)
                     view?.let {
                         Snackbar.make(
                             it,
@@ -143,6 +146,37 @@ class MainFragment : Fragment(R.layout.fragment_main), ItemClickListener {
                 MARK_UNCOMPLETED -> viewModel.onMarkUncompleted(note)
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        checkExpiration()
+    }
+
+    private fun checkExpiration() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            delay(1000)
+            checkList?.forEach { note ->
+                if (note.completeBy?.isNotEmpty() == true) {
+                    val completeBy =
+                        LocalDateTime.parse(
+                            note.completeBy,
+                            DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
+                        )
+                    if (LocalDateTime.now().isAfter(completeBy)) {
+                        note.warning = true
+                        viewModel.updateNote(note)
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        viewBinding.rcView.adapter = null
+        checkList = null
+
     }
 
     companion object {

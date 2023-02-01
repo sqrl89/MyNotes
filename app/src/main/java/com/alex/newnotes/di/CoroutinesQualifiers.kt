@@ -18,6 +18,3 @@ annotation class MainDispatcher
 @Qualifier
 annotation class MainImmediateDispatcher
 
-@Retention(AnnotationRetention.BINARY)
-@Qualifier
-annotation class AnalyticsDispatcher

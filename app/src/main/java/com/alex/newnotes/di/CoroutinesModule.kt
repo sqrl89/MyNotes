@@ -6,8 +6,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.asCoroutineDispatcher
-import java.util.concurrent.Executors
 
 @InstallIn(SingletonComponent::class)
 @Module
@@ -29,8 +27,4 @@ object CoroutinesModule {
     @Provides
     fun providesMainImmediateDispatcher(): CoroutineDispatcher = Dispatchers.Main.immediate
 
-    @AnalyticsDispatcher
-    @Provides
-    fun providesAnalyticsDispatcher(): CoroutineDispatcher =
-        Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 }

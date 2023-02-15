@@ -1,4 +1,4 @@
-package com.alex.newnotes.data
+package com.alex.newnotes.utils
 
 import android.Manifest
 import android.app.Application

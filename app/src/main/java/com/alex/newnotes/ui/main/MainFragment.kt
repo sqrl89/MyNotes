@@ -22,6 +22,7 @@ import com.alex.newnotes.R
 import com.alex.newnotes.data.database.Note
 import com.alex.newnotes.databinding.FragmentMainBinding
 import com.alex.newnotes.ui.main.NoteAdapter.ItemClickListener
+import com.alex.newnotes.utils.Const.DATE_TIME_PATTERN
 import com.alex.newnotes.utils.Const.FIRST_START_KEY
 import com.alex.newnotes.utils.Const.PREFS_NAME
 import com.alex.newnotes.utils.SwipeCallbacks
@@ -41,7 +42,6 @@ class MainFragment : Fragment(R.layout.fragment_main), ItemClickListener {
     private val viewBinding: FragmentMainBinding by viewBinding()
     private val adapter: NoteAdapter = NoteAdapter(this)
     private lateinit var sharedPref: SharedPreferences
-    private var checkList: List<Note>? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -90,7 +90,7 @@ class MainFragment : Fragment(R.layout.fragment_main), ItemClickListener {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.getNotes().collect { list ->
                     adapter.updateList(list)
-                    checkList = list
+                    viewModel.emitListForCheck(list)
                     if (list.isEmpty()) viewBinding.tvNoElements.visibility = View.VISIBLE
                     else viewBinding.tvNoElements.visibility = View.GONE
                 }
@@ -156,12 +156,12 @@ class MainFragment : Fragment(R.layout.fragment_main), ItemClickListener {
     private fun checkExpiration() {
         viewLifecycleOwner.lifecycleScope.launch {
             delay(1000)
-            checkList?.forEach { note ->
-                if (note.completeBy?.isNotEmpty() == true) {
+            viewModel.list.value.forEach { note ->
+                if (note?.completeBy?.isNotEmpty() == true) {
                     val completeBy =
                         LocalDateTime.parse(
                             note.completeBy,
-                            DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
+                            DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)
                         )
                     if (LocalDateTime.now().isAfter(completeBy)) {
                         note.warning = true
@@ -175,8 +175,6 @@ class MainFragment : Fragment(R.layout.fragment_main), ItemClickListener {
     override fun onDestroyView() {
         super.onDestroyView()
         viewBinding.rcView.adapter = null
-        checkList = null
-
     }
 
     companion object {

@@ -42,9 +42,10 @@ import com.ablanco.zoomy.Zoomy
 import com.alex.newnotes.R
 import com.alex.newnotes.R.anim.hide_action_button
 import com.alex.newnotes.R.anim.show_action_button
-import com.alex.newnotes.data.PictureManager
 import com.alex.newnotes.data.database.Note
 import com.alex.newnotes.databinding.FragmentEditBinding
+import com.alex.newnotes.utils.Const.DATE_TIME_PATTERN
+import com.alex.newnotes.utils.PictureManager
 import com.alex.newnotes.utils.changeStatusBarColor
 import com.alex.newnotes.utils.showDialog
 import com.alex.newnotes.utils.showSnackbar
@@ -72,9 +73,6 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
     private lateinit var resultSpeechLauncher: ActivityResultLauncher<Intent>
     private lateinit var pictureManager: PictureManager
     private var textToSpeech: TextToSpeech? = null
-    private var selectedColor: String? = null
-    private var byDateAndTime: String? = null
-    private var tmpUri: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -144,45 +142,51 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
         viewBinding.apply {
             viewLifecycleOwner.lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    viewModel.note.collectLatest {
-                        selectedColor = it?.color
-                        edTitle.setText(it?.title)
-                        edDescription.setText(it?.content)
-                        if (it?.creationDate?.isNotEmpty() == true) tvNewNote.text = buildString {
-                            append(resources.getString(R.string.created))
-                            append(it.creationDate)
-                        }
-                        if (it?.completed == true) tvNewNote.text = buildString {
-                            append(resources.getString(R.string.completed))
-                            append(it.completionDate)
-                        }
-                        if (it?.uri?.isNotEmpty() == true) {
-                            imageLayout.visibility = View.VISIBLE
-                            Glide.with(this@EditFragment).load(it.uri).into(imMain)
-                            Zoomy.Builder(requireActivity()).target(viewBinding.imMain).register()
-                        }
-                        if (tmpUri != null) {
-                            imageLayout.visibility = View.VISIBLE
-                            Glide.with(this@EditFragment).load(tmpUri).into(imMain)
-                            Zoomy.Builder(requireActivity()).target(viewBinding.imMain).register()
-                        } else tmpUri = it?.uri
-                        if (selectedColor?.isNotEmpty() == true) {
-                            requireActivity().changeStatusBarColor(
-                                Color.parseColor(selectedColor),
-                                false
-                            )
-                            editContainer.setBackgroundColor(Color.parseColor(selectedColor))
-                        }
-                        if (it?.completeBy?.isNotEmpty() == true) {
-                            tvCompleteBy.visibility = View.VISIBLE
-                            tvCompleteBy.text = buildString {
-                                append(resources.getString(R.string.complete_by))
-                                append(it.completeBy)
-                                byDateAndTime = it.completeBy
+                    viewModel.apply {
+                        note.collectLatest {
+                            it?.color?.let { it1 -> setSelectedColor(it1) }
+                            edTitle.setText(it?.title)
+                            edDescription.setText(it?.content)
+                            if (it?.creationDate?.isNotEmpty() == true) tvNewNote.text =
+                                buildString {
+                                    append(resources.getString(R.string.created))
+                                    append(it.creationDate)
+                                }
+                            if (it?.completed == true) tvNewNote.text = buildString {
+                                append(resources.getString(R.string.completed))
+                                append(it.completionDate)
                             }
-                            viewModel.checkExpiration(it)
+                            if (it?.uri?.isNotEmpty() == true) {
+                                imageLayout.visibility = View.VISIBLE
+                                Glide.with(this@EditFragment).load(it.uri).into(imMain)
+                                Zoomy.Builder(requireActivity()).target(viewBinding.imMain)
+                                    .register()
+                            }
+                            if (tmpUri.value != null) {
+                                imageLayout.visibility = View.VISIBLE
+                                Glide.with(this@EditFragment).load(tmpUri.value)
+                                    .into(imMain)
+                                Zoomy.Builder(requireActivity()).target(viewBinding.imMain)
+                                    .register()
+                            } else it?.uri?.let { it1 -> setTmpUri(it1) }
+                            if (selectedColor.value?.isNotEmpty() == true) {
+                                requireActivity().changeStatusBarColor(
+                                    Color.parseColor(selectedColor.value),
+                                    false
+                                )
+                                editContainer.setBackgroundColor(Color.parseColor(selectedColor.value))
+                            }
+                            if (it?.completeBy?.isNotEmpty() == true) {
+                                tvCompleteBy.visibility = View.VISIBLE
+                                tvCompleteBy.text = buildString {
+                                    append(resources.getString(R.string.complete_by))
+                                    append(it.completeBy)
+                                    setByDateAndTime(it.completeBy!!)
+                                }
+                                checkExpiration(it)
+                            }
+                            if (it?.warning == true) tvCompleteBy.setTextColor(Color.RED)
                         }
-                        if (it?.warning == true) tvCompleteBy.setTextColor(Color.RED)
                     }
                 }
             }
@@ -192,7 +196,7 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
     private fun showImage(uri: Uri) {
         viewBinding.imageLayout.visibility = View.VISIBLE
         Glide.with(this@EditFragment).load(uri).into(viewBinding.imMain)
-        tmpUri = uri.toString()
+        viewModel.setTmpUri(uri.toString())
     }
 
     private fun setListeners() {
@@ -203,13 +207,13 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
             }
             ibDelete.setOnClickListener {
                 imageLayout.visibility = View.GONE
-                tmpUri = DELETE_KEY
+                viewModel.setTmpUri(DELETE_KEY)
             }
             ibEdit.setOnClickListener { editImage() }
             ibPlay.setOnClickListener { speakOut() }
             tvCompleteBy.setOnClickListener {
                 tvCompleteBy.visibility = View.GONE
-                byDateAndTime = DELETE_KEY
+                viewModel.setByDateAndTime(DELETE_KEY)
                 viewModel.note.value?.completeBy = null
                 viewModel.note.value?.warning = false
             }
@@ -224,11 +228,11 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
                     Note().apply {
                         title = viewBinding.edTitle.text.toString()
                         content = viewBinding.edDescription.text.toString()
-                        uri = tmpUri
-                        color = selectedColor ?: DEFAULT_COLOR
+                        uri = viewModel.tmpUri.value
+                        color = viewModel.selectedColor.value ?: DEFAULT_COLOR
                         creationDate =
-                            SimpleDateFormat("dd-MM-yyyy", Locale.ROOT).format(Date())
-                        completeBy = byDateAndTime
+                            SimpleDateFormat(DATE_TIME_PATTERN, Locale.ROOT).format(Date())
+                        completeBy = viewModel.byDateAndTime.value
                     }.also {
                         viewModel.onSaveClick(it)
                         createNotification()
@@ -244,19 +248,19 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
                 note.apply {
                     title = viewBinding.edTitle.text.toString()
                     content = viewBinding.edDescription.text.toString()
-                    color = when (selectedColor) {
+                    color = when (viewModel.selectedColor.value) {
                         null -> note.color
-                        else -> selectedColor!!
+                        else -> viewModel.selectedColor.value!!
                     }
-                    uri = when (tmpUri) {
+                    uri = when (viewModel.tmpUri.value) {
                         DELETE_KEY -> null
                         null -> note.uri
-                        else -> tmpUri
+                        else -> viewModel.tmpUri.value
                     }
-                    completeBy = when (byDateAndTime) {
+                    completeBy = when (viewModel.byDateAndTime.value) {
                         DELETE_KEY -> null
                         null -> note.completeBy
-                        else -> byDateAndTime
+                        else -> viewModel.byDateAndTime.value
                     }
                 }.also {
                     createNotification()
@@ -305,9 +309,12 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
     }
 
     private fun changeColor(intent: Intent) {
-        selectedColor = intent.getStringExtra(SELECTED_COLOR) ?: ""
-        viewBinding.editContainer.setBackgroundColor(Color.parseColor(selectedColor))
-        requireActivity().changeStatusBarColor(Color.parseColor(selectedColor), false)
+        viewModel.setSelectedColor(intent.getStringExtra(SELECTED_COLOR) ?: "")
+        viewBinding.editContainer.setBackgroundColor(Color.parseColor(viewModel.selectedColor.value))
+        requireActivity().changeStatusBarColor(
+            Color.parseColor(viewModel.selectedColor.value),
+            false
+        )
     }
 
     private fun setFabs() {
@@ -340,7 +347,7 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
             }
             fbAddColor.setOnClickListener {
                 requireActivity().supportFragmentManager.let {
-                    NoteBottomSheetFragment.newInstance(viewModel.noteId.value).show(
+                    NoteBottomSheetFragment.newInstance(viewModel.note.value?.id).show(
                         it,
                         TAG_BOTTOM_FRAGMENT
                     )
@@ -395,7 +402,7 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
             showSnackbar(" " + e.message)
         }
     }
-    
+
     private fun share() {
         val intent = Intent()
         intent.apply {
@@ -404,7 +411,10 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
                 Intent.EXTRA_TEXT,
                 "${viewBinding.edTitle.text}. ${viewBinding.edDescription.text}."
             )
-            if (tmpUri != null) putExtra(Intent.EXTRA_STREAM, tmpUri?.toUri())
+            if (viewModel.tmpUri.value != null) putExtra(
+                Intent.EXTRA_STREAM,
+                viewModel.tmpUri.value?.toUri()
+            )
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             type = "text/plain"
         }
@@ -463,17 +473,17 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
                 if (value == null) {
                     if (edTitle.text.isNotEmpty() ||
                         edDescription.text.isNotEmpty() ||
-                        tmpUri?.isNotEmpty() == true
+                        viewModel.tmpUri.value?.isNotEmpty() == true
                     ) showDialog(TAG_CLOSE_EDIT_FRAGMENT, TAG_CLOSE_EDIT_FRAGMENT)
                     else viewModel.onBackPressed()
                 }
                 if (value != null) {
                     if (edTitle.text.toString() != value?.title.toString() ||
                         edDescription.text.toString() != value?.content.toString() ||
-                        tmpUri != value?.uri ||
-                        selectedColor != value?.color ||
-                        byDateAndTime != value?.completeBy ||
-                        byDateAndTime == DELETE_KEY
+                        viewModel.tmpUri.value != value?.uri ||
+                        viewModel.selectedColor.value != value?.color ||
+                        viewModel.byDateAndTime.value != value?.completeBy ||
+                        viewModel.byDateAndTime.value == DELETE_KEY
                     ) showDialog(TAG_CLOSE_EDIT_FRAGMENT, TAG_CLOSE_EDIT_FRAGMENT)
                     else viewModel.onBackPressed()
                 }
@@ -484,7 +494,7 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
     private fun editImage() {
         val intent = Intent(requireActivity(), DsPhotoEditorActivity::class.java)
         intent.apply {
-            data = tmpUri!!.toUri()
+            data = viewModel.tmpUri.value!!.toUri()
             putExtra(DsPhotoEditorConstants.DS_PHOTO_EDITOR_OUTPUT_DIRECTORY, "images")
             putExtra(
                 DsPhotoEditorConstants.DS_MAIN_BACKGROUND_COLOR,
@@ -547,7 +557,7 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
                     { _, hourOfDay, minute ->
                         date.set(Calendar.HOUR_OF_DAY, hourOfDay)
                         date.set(Calendar.MINUTE, minute)
-                        byDateAndTime = "${String.format("%02d", dayOfMonth)}-${
+                        val byDateAndTime = "${String.format("%02d", dayOfMonth)}-${
                             String.format("%02d", monthOfYear + 1)
                         }-$year ${String.format("%02d", hourOfDay)}:${
                             String.format(
@@ -555,10 +565,11 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
                                 minute
                             )
                         }"
+                        viewModel.setByDateAndTime(byDateAndTime)
                         viewBinding.tvCompleteBy.visibility = View.VISIBLE
                         viewBinding.tvCompleteBy.text = buildString {
                             append(resources.getString(R.string.complete_by))
-                            append(byDateAndTime)
+                            append(viewModel.byDateAndTime.value)
                         }
                         viewModel.note.value?.warning = false
                         viewBinding.tvCompleteBy.setTextColor(Color.BLACK)
@@ -572,7 +583,7 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
     }
 
     private fun createNotification() {
-        if (byDateAndTime != null && byDateAndTime != "delete") {
+        if (viewModel.byDateAndTime.value != null && viewModel.byDateAndTime.value != "delete") {
             if (VERSION.SDK_INT >= VERSION_CODES.TIRAMISU) {
                 if (ContextCompat.checkSelfPermission(
                         requireContext(),
@@ -590,7 +601,7 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
     private fun reminderNotification() {
         val title = viewBinding.edTitle.text.toString()
         val color = viewModel.note.value?.color ?: DEFAULT_COLOR
-        viewModel.reminderNotification(title, color, byDateAndTime!!)
+        viewModel.reminderNotification(title, color, viewModel.byDateAndTime.value!!)
     }
 
     override fun onDestroyView() {
@@ -599,14 +610,13 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
             requireActivity().activityResultRegistry, requireActivity().application
         ) {}
         LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(
-            broadcastReceiver)
+            broadcastReceiver
+        )
         Zoomy.unregister(viewBinding.imMain)
         if (textToSpeech != null) {
             textToSpeech!!.stop()
             textToSpeech!!.shutdown()
         }
-        byDateAndTime = null
-        tmpUri = null
     }
 
     companion object {

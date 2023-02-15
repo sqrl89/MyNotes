@@ -3,6 +3,7 @@ package com.alex.newnotes
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import com.alex.newnotes.ui.Screens
 import com.github.terrakok.cicerone.Navigator
 import com.github.terrakok.cicerone.NavigatorHolder
@@ -22,9 +23,8 @@ class AppActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-        if (savedInstanceState == null) {
-            navigator.applyCommands(arrayOf(Replace(Screens.Main())))
-        }
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        if (savedInstanceState == null) navigator.applyCommands(arrayOf(Replace(Screens.Main())))
     }
 
     override fun onResumeFragments() {

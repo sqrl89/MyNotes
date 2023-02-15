@@ -9,6 +9,7 @@ import com.github.terrakok.cicerone.Router
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
@@ -21,6 +22,9 @@ class MainViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val searchQuery = MutableStateFlow("")
+
+    private val _list = MutableStateFlow<List<Note?>>(emptyList())
+    val list = _list.asStateFlow()
 
     fun getNotes() =
         searchQuery.flatMapLatest { query ->
@@ -56,6 +60,12 @@ class MainViewModel @Inject constructor(
     fun onSearchQueryChanged(query: String) {
         viewModelScope.launch {
             searchQuery.emit(query)
+        }
+    }
+
+    fun emitListForCheck(checkList: List<Note>){
+        viewModelScope.launch {
+            _list.emit(checkList)
         }
     }
 

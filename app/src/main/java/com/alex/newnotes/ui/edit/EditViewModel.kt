@@ -1,5 +1,6 @@
 package com.alex.newnotes.ui.edit
 
+import android.content.ClipDescription
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alex.newnotes.data.database.Note
@@ -42,6 +43,12 @@ class EditViewModel @Inject constructor(
 
     private val _byDateAndTime = MutableStateFlow<String?>(null)
     val byDateAndTime = _byDateAndTime.asStateFlow()
+
+    private val _title = MutableStateFlow("")
+    val title = _title.asStateFlow()
+
+    private val _description = MutableStateFlow("")
+    val description = _description.asStateFlow()
 
     fun setNoteId(id: Int) {
         viewModelScope.launch {
@@ -98,6 +105,14 @@ class EditViewModel @Inject constructor(
 
     fun setByDateAndTime(byDateAndTime: String){
             _byDateAndTime.value = byDateAndTime
+    }
+
+    fun setTitle(title: String) {
+        _title.value = title
+    }
+
+    fun setDesc(description: String) {
+        _description.value = description
     }
 
 }

@@ -75,9 +75,7 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
     private var textToSpeech: TextToSpeech? = null
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         binding = FragmentEditBinding.inflate(layoutInflater)
         return viewBinding.root
@@ -94,6 +92,9 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
         setFragmentListeners()
         onBackPressed()
         descriptionTextWatcher()
+        //
+
+        //
 
         pictureManager = PictureManager(
             requireActivity().activityResultRegistry, requireActivity().application
@@ -602,6 +603,18 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
         val title = viewBinding.edTitle.text.toString()
         val color = viewModel.note.value?.color ?: DEFAULT_COLOR
         viewModel.reminderNotification(title, color, viewModel.byDateAndTime.value!!)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        viewModel.setTitle(viewBinding.edTitle.text.toString())
+        viewModel.setDesc(viewBinding.edDescription.text.toString())
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewBinding.edTitle.setText(viewModel.title.value)
+        viewBinding.edDescription.setText(viewModel.description.value)
     }
 
     override fun onDestroyView() {

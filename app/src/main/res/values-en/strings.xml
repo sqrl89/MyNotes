@@ -62,5 +62,6 @@
     <string name="go">Go</string>
     <string name="warning">warning</string>
     <string name="grant_notify_permission">Please grant Notification permission from App Settings</string>
+    <string name="notification_channel">Reminder</string>
 
 </resources>

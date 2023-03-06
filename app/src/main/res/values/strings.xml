@@ -62,7 +62,7 @@
     <string name="unfinished_task">У вас невыполненная задача!</string>
     <string name="go">Перейти</string>
     <string name="warning">warning</string>
-    <string name="notification_channel" translatable="false">Notification Channel</string>
+    <string name="notification_channel">Напоминания о задачах</string>
     <string name="notification_contains" translatable="false">This notification contains important announcement</string>
 
 </resources>

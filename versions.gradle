@@ -9,4 +9,5 @@ ext {
     glideVersion = "4.11.0"
     fabVersion = "3.3.0"
     zoomyVersion = "1.0.0"
+    appVersion = "1.0.2"
 }

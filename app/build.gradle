@@ -14,10 +14,10 @@ android {
         minSdk 26
         targetSdk 33
         versionCode 1
-        versionName "1.0"
+        versionName "$appVersion"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        renderscriptTargetApi 21
+        renderscriptTargetApi 26
         renderscriptSupportModeEnabled true
     }
 

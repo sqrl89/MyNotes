@@ -14,7 +14,7 @@ import android.graphics.Color
 import androidx.core.app.NotificationCompat
 import com.alex.newnotes.AppActivity
 import com.alex.newnotes.R
-import com.alex.newnotes.ui.edit.EditFragment.Companion.CHANNEL_ID
+import com.alex.newnotes.utils.Const.CHANNEL_ID
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 

@@ -6,8 +6,10 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
@@ -20,6 +22,7 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -45,6 +48,8 @@ import com.alex.newnotes.R.anim.show_action_button
 import com.alex.newnotes.data.database.Note
 import com.alex.newnotes.databinding.FragmentEditBinding
 import com.alex.newnotes.utils.Const.DATE_TIME_PATTERN
+import com.alex.newnotes.utils.Const.PREFS_NEW_ID_KEY
+import com.alex.newnotes.utils.Const.PREFS_NEW_ID_NAME
 import com.alex.newnotes.utils.PictureManager
 import com.alex.newnotes.utils.changeStatusBarColor
 import com.alex.newnotes.utils.showDialog
@@ -72,6 +77,7 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
     private lateinit var pickSingleMediaLauncher: ActivityResultLauncher<Intent>
     private lateinit var resultSpeechLauncher: ActivityResultLauncher<Intent>
     private lateinit var pictureManager: PictureManager
+    private lateinit var sharedPref: SharedPreferences
     private var textToSpeech: TextToSpeech? = null
 
     override fun onCreateView(
@@ -84,17 +90,16 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         arguments?.getInt(NOTE_KEY, -1).also {
-            if (it != -1) it?.let { it1 -> viewModel.setNoteId(it1) }
+            if (it != -1) it?.let { id -> viewModel.setNoteId(id) }
         }
+        sharedPref = requireActivity().getSharedPreferences(PREFS_NEW_ID_NAME, MODE_PRIVATE)
         textToSpeech = TextToSpeech(requireContext(), this)
         setUi()
         setListeners()
         setFragmentListeners()
         onBackPressed()
         descriptionTextWatcher()
-        //
-
-        //
+        Log.e("TAG", "onViewCreated: ${sharedPref.getInt(PREFS_NEW_ID_KEY, 999)}", )
 
         pictureManager = PictureManager(
             requireActivity().activityResultRegistry, requireActivity().application
@@ -237,10 +242,19 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
                     }.also {
                         viewModel.onSaveClick(it)
                         createNotification()
+                        setNewIdInPref()
                     }
                 }
             }
         }
+    }
+
+    private fun setNewIdInPref() {
+        var count = sharedPref.getInt(PREFS_NEW_ID_KEY, 0)
+        count++
+        requireActivity().getSharedPreferences(PREFS_NEW_ID_NAME, MODE_PRIVATE).edit().also {
+            it.putInt(PREFS_NEW_ID_KEY, count)
+        }.apply()
     }
 
     private fun updateNote(note: Note) {
@@ -584,7 +598,7 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
     }
 
     private fun createNotification() {
-        if (viewModel.byDateAndTime.value != null && viewModel.byDateAndTime.value != "delete") {
+        if (viewModel.byDateAndTime.value != null && viewModel.byDateAndTime.value != DELETE_KEY) {
             if (VERSION.SDK_INT >= VERSION_CODES.TIRAMISU) {
                 if (ContextCompat.checkSelfPermission(
                         requireContext(),
@@ -600,9 +614,10 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
     }
 
     private fun reminderNotification() {
+        val id = viewModel.note.value?.id ?: viewModel.noteId.value
         val title = viewBinding.edTitle.text.toString()
         val color = viewModel.note.value?.color ?: DEFAULT_COLOR
-        viewModel.reminderNotification(title, color, viewModel.byDateAndTime.value!!)
+        viewModel.reminderNotification(id!!, title, color, viewModel.byDateAndTime.value!!)
     }
 
     override fun onPause() {
@@ -638,16 +653,15 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
         const val SOURCE_CAMERA = "camera"
         const val SOURCE_GALLERY = "gallery"
         const val DELETE_KEY = "delete"
-        const val NOTE_KEY = "noteId"
+        const val NOTE_KEY = "note_id"
         const val TAG_BOTTOM_FRAGMENT = "bottom_fragment"
-        const val SELECTED_COLOR = "selectedColor"
+        const val SELECTED_COLOR = "selected_color"
         const val BOTTOM_ACTION = "bottom_sheet_action"
         const val TAG_GET_PICTURE = "get_picture"
         const val DEFAULT_COLOR = "#373737"
         const val SAVE_KEY = "save"
         const val CLOSE_KEY = "close"
         const val TAG_CLOSE_EDIT_FRAGMENT = "close_fragment"
-        const val CHANNEL_ID = "notification_channel"
 
         fun newInstance(note: Note) = EditFragment().apply {
             arguments = Bundle().apply {

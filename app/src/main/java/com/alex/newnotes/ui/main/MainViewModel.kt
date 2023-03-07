@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.alex.newnotes.data.database.Note
 import com.alex.newnotes.ui.Screens
 import com.alex.newnotes.ui.main.core.MainInteractor
+import com.alex.newnotes.utils.notifications.NotificationUtils
 import com.github.terrakok.cicerone.Router
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +19,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val router: Router,
-    private val interactor: MainInteractor
+    private val interactor: MainInteractor,
+    private val notifyUtil: NotificationUtils
 ) : ViewModel() {
 
     private val searchQuery = MutableStateFlow("")
@@ -72,6 +74,7 @@ class MainViewModel @Inject constructor(
     fun onMarkCompleted(note: Note) {
         viewModelScope.launch {
             interactor.markCompleted(note)
+            notifyUtil.cancelReminder(note.id)
         }
     }
 

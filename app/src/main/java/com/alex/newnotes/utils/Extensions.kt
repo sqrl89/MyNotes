@@ -1,13 +1,15 @@
 package com.alex.newnotes.utils
 
 import android.app.Activity
-import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.view.WindowManager
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
 import com.alex.newnotes.ui.main.MainFragment.Companion.TAG_GREETINGS
-import com.alex.newnotes.utils.Const.FIRST_START_KEY
-import com.alex.newnotes.utils.Const.PREFS_NAME
+import com.alex.newnotes.utils.Const.PREFS_FIRST_START_KEY
+import com.alex.newnotes.utils.Const.PREFS_FIRST_START_NAME
+import com.alex.newnotes.utils.Const.PREFS_NEW_ID_KEY
+import com.alex.newnotes.utils.Const.PREFS_NEW_ID_NAME
 import com.google.android.material.snackbar.Snackbar
 
 fun Activity.changeStatusBarColor(color: Int, isLight: Boolean) {
@@ -22,12 +24,12 @@ fun Fragment.showDialog(param: String, tag: String) {
 
 fun Fragment.checkFirstRun() {
     showDialog(TAG_GREETINGS, TAG_GREETINGS)
-    val sharedPref = requireActivity().getSharedPreferences(
-        PREFS_NAME,
-        Context.MODE_PRIVATE
-    )
-    sharedPref.edit().also {
-        it.putBoolean(FIRST_START_KEY, false)
+    requireActivity().getSharedPreferences(PREFS_FIRST_START_NAME, MODE_PRIVATE).edit().also {
+        it.putBoolean(PREFS_FIRST_START_KEY, false)
+    }.apply()
+
+    requireActivity().getSharedPreferences(PREFS_NEW_ID_NAME, MODE_PRIVATE).edit().also {
+        it.putInt(PREFS_NEW_ID_KEY, 0)
     }.apply()
 }
 

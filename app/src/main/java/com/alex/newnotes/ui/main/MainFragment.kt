@@ -23,8 +23,8 @@ import com.alex.newnotes.data.database.Note
 import com.alex.newnotes.databinding.FragmentMainBinding
 import com.alex.newnotes.ui.main.NoteAdapter.ItemClickListener
 import com.alex.newnotes.utils.Const.DATE_TIME_PATTERN
-import com.alex.newnotes.utils.Const.FIRST_START_KEY
-import com.alex.newnotes.utils.Const.PREFS_NAME
+import com.alex.newnotes.utils.Const.PREFS_FIRST_START_KEY
+import com.alex.newnotes.utils.Const.PREFS_FIRST_START_NAME
 import com.alex.newnotes.utils.SwipeCallbacks
 import com.alex.newnotes.utils.changeStatusBarColor
 import com.alex.newnotes.utils.checkFirstRun
@@ -45,8 +45,8 @@ class MainFragment : Fragment(R.layout.fragment_main), ItemClickListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        sharedPref = requireActivity().getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        if (sharedPref.getBoolean(FIRST_START_KEY, true)) checkFirstRun()
+        sharedPref = requireActivity().getSharedPreferences(PREFS_FIRST_START_NAME, MODE_PRIVATE)
+        if (sharedPref.getBoolean(PREFS_FIRST_START_KEY, true)) checkFirstRun()
         setUi()
         collectNotes()
         NotificationManagerCompat.from(requireContext()).cancelAll()

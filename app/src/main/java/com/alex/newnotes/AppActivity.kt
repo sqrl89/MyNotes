@@ -14,7 +14,6 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class AppActivity : AppCompatActivity() {
-
     @Inject
     lateinit var navigatorHolder: NavigatorHolder
     private val navigator: Navigator = AppNavigator(this, R.id.container)

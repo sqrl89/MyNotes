@@ -66,12 +66,21 @@ class NotificationUtilsImpl @Inject constructor(@ApplicationContext val context:
             return notificationManager
         }
 
-    override fun setReminder(timeInMillis: Long, title: String, color: String) {
+    override fun setReminder(timeInMillis: Long, id: Int, title: String, color: String) {
         val intent = Intent(context, ReminderBroadcast::class.java)
+        intent.putExtra("id", id)
         intent.putExtra("title", title)
         intent.putExtra("color", color)
-        val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val pendingIntent = PendingIntent.getBroadcast(context, id, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
         alarmManager[AlarmManager.RTC_WAKEUP, timeInMillis] = pendingIntent
+    }
+
+    override fun cancelReminder(id: Int) {
+        val intent = Intent(context, ReminderBroadcast::class.java)
+        intent.putExtra("id", id)
+        val pendingIntent = PendingIntent.getBroadcast(context, id, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
+        alarmManager.cancel(pendingIntent)
     }
 }

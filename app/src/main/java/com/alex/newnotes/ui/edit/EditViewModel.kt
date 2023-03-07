@@ -1,6 +1,5 @@
 package com.alex.newnotes.ui.edit
 
-import android.content.ClipDescription
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alex.newnotes.data.database.Note
@@ -30,9 +29,11 @@ class EditViewModel @Inject constructor(
     private val notifyUtil: NotificationUtils
 ) : ViewModel() {
 
-    private val noteId = MutableStateFlow<Int?>(null)
-    val note = noteId.flatMapLatest {
-        flowOf(it?.let { it1 -> interactor.getNoteDetails(it1) })
+    private val _noteId = MutableStateFlow<Int?>(null)
+    val noteId = _noteId.asStateFlow()
+
+    val note = _noteId.flatMapLatest {
+        flowOf(it?.let { noteId -> interactor.getNoteDetails(noteId) })
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private val _tmpUri = MutableStateFlow<String?>(null)
@@ -52,7 +53,7 @@ class EditViewModel @Inject constructor(
 
     fun setNoteId(id: Int) {
         viewModelScope.launch {
-            noteId.emit(id)
+            _noteId.emit(id)
         }
     }
 
@@ -88,23 +89,23 @@ class EditViewModel @Inject constructor(
         }
     }
 
-    fun reminderNotification(title: String, color: String, byDateAndTime: String) {
+    fun reminderNotification(id: Int, title: String, color: String, byDateAndTime: String) {
         val calendar = Calendar.getInstance()
         val sdf = SimpleDateFormat(DATE_TIME_PATTERN, Locale.ROOT)
         calendar.time = sdf.parse(byDateAndTime)!!
-        notifyUtil.setReminder(calendar.timeInMillis, title, color)
+        notifyUtil.setReminder(calendar.timeInMillis, id, title, color)
     }
 
-    fun setTmpUri(uri: String){
-            _tmpUri.value = uri
+    fun setTmpUri(uri: String) {
+        _tmpUri.value = uri
     }
 
-    fun setSelectedColor(selectedColor: String){
+    fun setSelectedColor(selectedColor: String) {
         _selectedColor.value = selectedColor
     }
 
-    fun setByDateAndTime(byDateAndTime: String){
-            _byDateAndTime.value = byDateAndTime
+    fun setByDateAndTime(byDateAndTime: String) {
+        _byDateAndTime.value = byDateAndTime
     }
 
     fun setTitle(title: String) {
@@ -114,5 +115,4 @@ class EditViewModel @Inject constructor(
     fun setDesc(description: String) {
         _description.value = description
     }
-
 }

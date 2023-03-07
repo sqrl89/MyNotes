@@ -11,13 +11,10 @@ class ReminderBroadcast : BroadcastReceiver() {
         val notificationUtils = NotificationUtilsImpl(context!!)
         val title = intent?.getStringExtra("title")
         val color = intent?.getStringExtra("color")
+        val id = intent?.getIntExtra("id", 111)
         val builder = notificationUtils.setNotification(title!!, color!!)
         with(NotificationManagerCompat.from(context)) {
-            notificationUtils.manager!!.notify(
-                (System.currentTimeMillis() % 1000).toInt(),
-                builder.build()
-            )
+            notificationUtils.manager!!.notify(id!!, builder.build())
         }
     }
 }
-

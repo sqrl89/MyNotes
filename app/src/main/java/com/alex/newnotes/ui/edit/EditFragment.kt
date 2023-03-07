@@ -22,7 +22,6 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -99,7 +98,6 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
         setFragmentListeners()
         onBackPressed()
         descriptionTextWatcher()
-        Log.e("TAG", "onViewCreated: ${sharedPref.getInt(PREFS_NEW_ID_KEY, 999)}", )
 
         pictureManager = PictureManager(
             requireActivity().activityResultRegistry, requireActivity().application

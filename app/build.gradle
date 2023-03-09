@@ -25,7 +25,7 @@ android {
         release {
             keyAlias 'MyNotes'
             keyPassword '726417'
-            storeFile file('E:\\MyProjects\\Release\\MyNotes\\mynotes090323.jks')
+            storeFile file('E:\\MyProjects\\Releases\\MyNotes\\mynotes090323.jks')
             storePassword '726417'
         }
     }

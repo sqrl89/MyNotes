@@ -2,7 +2,7 @@ ext {
     roomVersion = "2.5.0"
     hiltVersion = "2.44"
     viewBindingDelegateVersion = "1.5.6"
-    lifecycleVersion = "2.6.0"
+    lifecycleVersion = "2.5.1"
     ciceroneVersion = "7.1"
     viewBindingVersion = "7.4.2"
     fragmentVersion = "1.5.5"

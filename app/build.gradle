@@ -21,26 +21,11 @@ android {
         renderscriptSupportModeEnabled true
     }
 
-    signingConfigs {
-        release {
-            keyAlias 'MyNotes'
-            keyPassword '726417'
-            storeFile file('E:\\MyProjects\\Releases\\MyNotes\\mynotes090323.jks')
-            storePassword '726417'
-        }
-    }
     buildTypes {
         release {
-            debuggable true
             minifyEnabled true
             shrinkResources true
-            signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-        debug {
-            debuggable true
-            minifyEnabled false
-            applicationIdSuffix '.debug'
         }
     }
 

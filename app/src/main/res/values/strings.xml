@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">MyNotes</string>
+    <string name="app_name">Заметки</string>
     <string name="hint_title">Заголовок</string>
     <string name="hint_text">Текст</string>
     <string name="choose_image">Выбор изображения</string>

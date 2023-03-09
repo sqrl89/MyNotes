@@ -46,9 +46,12 @@ import com.alex.newnotes.R.anim.hide_action_button
 import com.alex.newnotes.R.anim.show_action_button
 import com.alex.newnotes.data.database.Note
 import com.alex.newnotes.databinding.FragmentEditBinding
+import com.alex.newnotes.utils.Const.ACTION
 import com.alex.newnotes.utils.Const.DATE_TIME_PATTERN
+import com.alex.newnotes.utils.Const.DEFAULT_COLOR
 import com.alex.newnotes.utils.Const.PREFS_NEW_ID_KEY
 import com.alex.newnotes.utils.Const.PREFS_NEW_ID_NAME
+import com.alex.newnotes.utils.Const.SELECTED_COLOR
 import com.alex.newnotes.utils.PictureManager
 import com.alex.newnotes.utils.changeStatusBarColor
 import com.alex.newnotes.utils.showDialog
@@ -126,8 +129,10 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
                 if (result.resultCode == RESULT_OK && data != null) {
                     val res: ArrayList<String> =
                         data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS) as ArrayList<String>
-                    viewBinding.edDescription.append(
-                        Objects.requireNonNull(res)[0] + " "
+                    viewModel.setDesc(
+                        viewBinding.edDescription.text.toString() + Objects.requireNonNull(
+                            res
+                        )[0] + " "
                     )
                 }
             }
@@ -148,7 +153,7 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     viewModel.apply {
                         note.collectLatest {
-                            it?.color?.let { it1 -> setSelectedColor(it1) }
+                            it?.color?.let { color -> setSelectedColor(color) }
                             edTitle.setText(it?.title)
                             edDescription.setText(it?.content)
                             if (it?.creationDate?.isNotEmpty() == true) tvNewNote.text =
@@ -306,7 +311,7 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
     private val broadcastReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(p0: Context?, intent: Intent?) {
             activity?.resources?.apply {
-                when (intent!!.getStringExtra(resources.getString(R.string.action))) {
+                when (intent!!.getStringExtra(ACTION)) {
                     getString(R.string.blue) -> changeColor(intent)
                     getString(R.string.cyan) -> changeColor(intent)
                     getString(R.string.green) -> changeColor(intent)
@@ -361,8 +366,7 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
             fbAddColor.setOnClickListener {
                 requireActivity().supportFragmentManager.let {
                     NoteBottomSheetFragment.newInstance(viewModel.note.value?.id).show(
-                        it,
-                        TAG_BOTTOM_FRAGMENT
+                        it, TAG_BOTTOM_FRAGMENT
                     )
                 }
             }
@@ -653,10 +657,8 @@ class EditFragment : Fragment(R.layout.fragment_edit), TextToSpeech.OnInitListen
         const val DELETE_KEY = "delete"
         const val NOTE_KEY = "note_id"
         const val TAG_BOTTOM_FRAGMENT = "bottom_fragment"
-        const val SELECTED_COLOR = "selected_color"
         const val BOTTOM_ACTION = "bottom_sheet_action"
         const val TAG_GET_PICTURE = "get_picture"
-        const val DEFAULT_COLOR = "#373737"
         const val SAVE_KEY = "save"
         const val CLOSE_KEY = "close"
         const val TAG_CLOSE_EDIT_FRAGMENT = "close_fragment"

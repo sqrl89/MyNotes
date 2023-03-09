@@ -7,4 +7,8 @@ object Const {
     const val CHANNEL_ID = "reminder"
     const val PREFS_NEW_ID_NAME = "new_id"
     const val PREFS_NEW_ID_KEY = "new_id_key"
+    const val SELECTED_COLOR = "selected_color"
+    const val ACTION = "action"
+    const val BOTTOM_SHEET_ACTION = "bottom_sheet_action"
+    const val DEFAULT_COLOR = "#373737"
 }

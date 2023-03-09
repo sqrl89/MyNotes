@@ -12,29 +12,32 @@ import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.alex.newnotes.R
+import com.alex.newnotes.R.color.blue
+import com.alex.newnotes.R.color.cyan
+import com.alex.newnotes.R.color.dark
+import com.alex.newnotes.R.color.green
+import com.alex.newnotes.R.color.indigo
+import com.alex.newnotes.R.color.orange
+import com.alex.newnotes.R.color.purple
+import com.alex.newnotes.R.color.red
+import com.alex.newnotes.R.color.yellow
 import com.alex.newnotes.databinding.FragmentEditColorsBinding
+import com.alex.newnotes.utils.Const.ACTION
+import com.alex.newnotes.utils.Const.BOTTOM_SHEET_ACTION
+import com.alex.newnotes.utils.Const.DEFAULT_COLOR
+import com.alex.newnotes.utils.Const.SELECTED_COLOR
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_COLLAPSED
+import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_DRAGGING
+import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
+import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
+import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_SETTLING
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
 class NoteBottomSheetFragment : BottomSheetDialogFragment() {
 
-    private var selectedColor = "#373737"
+    private var selectedColor = DEFAULT_COLOR
     private val viewBinding: FragmentEditColorsBinding by viewBinding()
-
-    companion object {
-        var noteId: Int? = null
-        const val DRAGGING = "DRAGGING"
-        const val SETTLING = "SETTLING"
-        const val EXPANDED = "EXPANDED"
-        const val COLLAPSED = "COLLAPSED"
-        const val HIDDEN = "HIDDEN"
-
-        fun newInstance(id: Int?) = NoteBottomSheetFragment().apply {
-            arguments = Bundle().apply {
-                noteId = id
-            }
-        }
-    }
 
     @SuppressLint("RestrictedApi", "InflateParams")
     override fun setupDialog(dialog: Dialog, style: Int) {
@@ -49,22 +52,14 @@ class NoteBottomSheetFragment : BottomSheetDialogFragment() {
                 override fun onStateChanged(bottomSheet: View, newState: Int) {
                     var state = ""
                     while (newState == newState) {
-                        BottomSheetBehavior.STATE_DRAGGING.apply {
-                            state = DRAGGING
-                        }
-                        BottomSheetBehavior.STATE_SETTLING.apply {
-                            state = SETTLING
-                        }
-                        BottomSheetBehavior.STATE_EXPANDED.apply {
-                            state = EXPANDED
-                        }
-                        BottomSheetBehavior.STATE_COLLAPSED.apply {
-                            state = COLLAPSED
-                        }
-                        BottomSheetBehavior.STATE_HIDDEN.apply {
+                        STATE_DRAGGING.apply { state = DRAGGING }
+                        STATE_SETTLING.apply { state = SETTLING }
+                        STATE_EXPANDED.apply { state = EXPANDED }
+                        STATE_COLLAPSED.apply { state = COLLAPSED }
+                        STATE_HIDDEN.apply {
                             state = HIDDEN
                             dismiss()
-                            behavior.state = BottomSheetBehavior.STATE_COLLAPSED
+                            behavior.state = STATE_COLLAPSED
                         }
                     }
                 }
@@ -87,45 +82,21 @@ class NoteBottomSheetFragment : BottomSheetDialogFragment() {
         setListener()
     }
 
+
+
     private fun setListener() {
         viewBinding.apply {
             radioGroup.setOnCheckedChangeListener { _, checkedId ->
                 when (checkedId) {
-                    R.id.rbDark -> {
-                        setImageResources(R.color.dark, resources.getString(R.string.dark))
-                    }
-
-                    R.id.rbBlue -> {
-                        setImageResources(R.color.blue, resources.getString(R.string.blue))
-                    }
-
-                    R.id.rbCyan -> {
-                        setImageResources(R.color.cyan, resources.getString(R.string.cyan))
-                    }
-
-                    R.id.rbYellow -> {
-                        setImageResources(R.color.yellow, resources.getString(R.string.yellow))
-                    }
-
-                    R.id.rbRed -> {
-                        setImageResources(R.color.red, resources.getString(R.string.red))
-                    }
-
-                    R.id.rbGreen -> {
-                        setImageResources(R.color.green, resources.getString(R.string.green))
-                    }
-
-                    R.id.rbOrange -> {
-                        setImageResources(R.color.orange, resources.getString(R.string.orange))
-                    }
-
-                    R.id.rbIndigo -> {
-                        setImageResources(R.color.indigo, resources.getString(R.string.indigo))
-                    }
-
-                    R.id.rbPurple -> {
-                        setImageResources(R.color.purple, resources.getString(R.string.purple))
-                    }
+                    R.id.rbYellow -> setImageResources(yellow, resources.getString(R.string.yellow))
+                    R.id.rbIndigo -> setImageResources(indigo, resources.getString(R.string.indigo))
+                    R.id.rbOrange -> setImageResources(orange, resources.getString(R.string.orange))
+                    R.id.rbPurple -> setImageResources(purple, resources.getString(R.string.purple))
+                    R.id.rbGreen -> setImageResources(green, resources.getString(R.string.green))
+                    R.id.rbDark -> setImageResources(dark, resources.getString(R.string.dark))
+                    R.id.rbBlue -> setImageResources(blue, resources.getString(R.string.blue))
+                    R.id.rbCyan -> setImageResources(cyan, resources.getString(R.string.cyan))
+                    R.id.rbRed -> setImageResources(red, resources.getString(R.string.red))
                 }
             }
         }
@@ -140,9 +111,24 @@ class NoteBottomSheetFragment : BottomSheetDialogFragment() {
     }
 
     private fun sendBroadcast(colorString: String) {
-        val intent = Intent(resources.getString(R.string.bottom_sheet_action))
-        intent.putExtra(resources.getString(R.string.action), colorString)
-        intent.putExtra(resources.getString(R.string.selected_color), selectedColor)
+        val intent = Intent(BOTTOM_SHEET_ACTION)
+        intent.putExtra(ACTION, colorString)
+        intent.putExtra(SELECTED_COLOR, selectedColor)
         LocalBroadcastManager.getInstance(requireContext()).sendBroadcast(intent)
+    }
+
+    companion object {
+        var noteId: Int? = null
+        const val DRAGGING = "DRAGGING"
+        const val SETTLING = "SETTLING"
+        const val EXPANDED = "EXPANDED"
+        const val COLLAPSED = "COLLAPSED"
+        const val HIDDEN = "HIDDEN"
+
+        fun newInstance(id: Int?) = NoteBottomSheetFragment().apply {
+            arguments = Bundle().apply {
+                noteId = id
+            }
+        }
     }
 }
